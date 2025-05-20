@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Image, Smile, MapPin, Calendar } from 'lucide-react';
+import { MapPin, Calendar } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -11,12 +11,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { toast } from 'sonner';
+import { MediaUploader } from '@/components/media-uploader';
 
 const MAX_CHARACTERS = 280;
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title is too long'),
   content: z.string().min(1, 'Content is required').max(MAX_CHARACTERS, `Content must be less than ${MAX_CHARACTERS} characters`),
+  image: z.instanceof(File).optional(),
+  location: z.string().optional(),
+  date: z.date(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -24,6 +28,7 @@ type FormValues = z.infer<typeof formSchema>;
 export function PostForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<File | null>(null);
+  const [fileInputReset, setFileInputReset] = useState(0);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
@@ -31,20 +36,33 @@ export function PostForm() {
     defaultValues: {
       title: '',
       content: '',
+      date: new Date(),
     },
   });
 
-  const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedMedia(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setMediaPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+ const handleMediaChange = (file: File) => {
+  if (file) {
+    setSelectedMedia(file);
+    form.setValue("image", file); // Update form value if needed
+    
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string' || reader.result === null) {
+        setMediaPreview(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+  const handleRemoveMedia = () => {
+    setSelectedMedia(null);
+    setMediaPreview(null);
+    setFileInputReset(prev => prev + 1);
   };
+
+
+
 
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
@@ -135,33 +153,16 @@ export function PostForm() {
                     variant="destructive"
                     size="icon"
                     className="absolute top-2 right-2 h-8 w-8 rounded-full"
-                    onClick={() => {
-                      setSelectedMedia(null);
-                      setMediaPreview(null);
-                    }}
+                    onClick={handleRemoveMedia} // Use the new function
                   >
                     ×
                   </Button>
                 </div>
               )}
-
               {/* Action Buttons */}
               <div className="flex items-center justify-between pt-4 border-t">
                 <div className="flex space-x-2">
-                  <label className="cursor-pointer">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleMediaChange}
-                      className="hidden"
-                    />
-                    <Button type="button" variant="ghost" size="icon">
-                      <Image className="h-5 w-5 text-blue-500"  />
-                    </Button>
-                  </label>
-                  <Button type="button" variant="ghost" size="icon">
-                    <Smile className="h-5 w-5" />
-                  </Button>
+                    <MediaUploader onFileChange={handleMediaChange} resetTrigger={fileInputReset} />
                   <Button type="button" variant="ghost" size="icon">
                     <Calendar className="h-5 w-5" />
                   </Button>
