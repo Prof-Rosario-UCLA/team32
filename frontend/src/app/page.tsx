@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import {Showcase} from '@/components/showcase';
+
 
 export default function Home() {
   const [healthStatus, setHealthStatus] = useState<{ status: string; message: string } | null>(null);
@@ -59,6 +61,8 @@ export default function Home() {
           <p className="text-gray-600">
             This is a modern full-stack application built with Next.js and Express.
           </p>
+
+          <Showcase/>
         </div>
       </div>
     </main>

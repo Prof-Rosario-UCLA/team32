@@ -11,6 +11,4 @@ export function Showcase() {
             
         </Carousel>
     )
-
-
 }

@@ -79,8 +79,8 @@ export function PostForm() {
       
       // Reset form
       form.reset();
-      setSelectedMedia(null);
-      setMediaPreview(null);
+      handleRemoveMedia();
+
       toast.success('Post created successfully!');
     } catch (error) {
       console.error('Error creating post:', error);
