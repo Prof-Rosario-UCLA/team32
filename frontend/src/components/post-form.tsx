@@ -19,8 +19,9 @@ const MAX_CHARACTERS = 280;
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title is too long'),
   content: z.string().min(1, 'Content is required').max(MAX_CHARACTERS, `Content must be less than ${MAX_CHARACTERS} characters`),
-  image: z.instanceof(File).optional(),
-  location: z.string().optional(),
+  image: typeof File !== 'undefined' 
+    ? z.instanceof(File).optional()
+    : z.any().optional(),  location: z.string().optional(),
   date: z.date(),
 });
 
