@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MapPin, Calendar } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
+import { AutocompleteInput } from '@/components/auto-complete-input';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { toast } from 'sonner';
 import { MediaUploader } from '@/components/media-uploader';
@@ -61,12 +62,9 @@ export function PostForm() {
     setFileInputReset(prev => prev + 1);
   };
 
-
-
-
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
-    
+
     try {
       const formData = new FormData();
       formData.append('title', values.title);
@@ -99,6 +97,7 @@ export function PostForm() {
       <Card>
         <CardContent className="pt-6">
           <Form {...form}>
+            {/* Show the date with Time*/}
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
@@ -110,6 +109,26 @@ export function PostForm() {
                         placeholder="Add a title..."
                         className="text-xl font-semibold border-none focus-visible:ring-0 focus-visible:ring-offset-0"
                         {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <AutocompleteInput
+                        value={field.value || ''}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        placeholder="Add a location at UCLA (optional)"
+                        dataSource="/data/locations.txt"
+                        icon={<MapPin className="h-4 w-4" />}
                       />
                     </FormControl>
                     <FormMessage />
@@ -161,16 +180,7 @@ export function PostForm() {
               )}
               {/* Action Buttons */}
               <div className="flex items-center justify-between pt-4 border-t">
-                <div className="flex space-x-2">
-                    <MediaUploader onFileChange={handleMediaChange} resetTrigger={fileInputReset} />
-                  <Button type="button" variant="ghost" size="icon">
-                    <Calendar className="h-5 w-5" />
-                  </Button>
-                  <Button type="button" variant="ghost" size="icon">
-                    <MapPin className="h-5 w-5" />
-                  </Button>
-                </div>
-
+                <MediaUploader onFileChange={handleMediaChange} resetTrigger={fileInputReset} />
                 <Button
                   type="submit"
                   disabled={isSubmitting || !form.formState.isValid}
