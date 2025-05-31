@@ -4,7 +4,10 @@
   "private": true,
   "description": "Bruin Hot Take",
   "main": "index.js",
-  "workspaces": ["frontend", "backend"],
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "scripts": {
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:frontend": "cd frontend && npm run dev",
@@ -20,5 +23,8 @@
   "type": "module",
   "devDependencies": {
     "concurrently": "^9.1.2"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7"
   }
 }
