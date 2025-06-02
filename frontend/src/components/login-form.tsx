@@ -48,14 +48,14 @@ export function LoginForm({
         className={cn("flex flex-col gap-6", className)} 
         onSubmit={form.handleSubmit(handleSubmit)}
       >
-        <Card>
-          <CardHeader>
-            <CardTitle>Login to your account</CardTitle>
-            <CardDescription>
+      <Card>
+        <CardHeader>
+          <CardTitle>Login to your account</CardTitle>
+          <CardDescription>
               Enter your UCLA email to login to your account
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
             <div className="flex flex-col gap-6">
               <FormField
                 control={form.control}
@@ -64,11 +64,11 @@ export function LoginForm({
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input
+                <Input
                         placeholder="m@g.ucla.edu"
-                        type="email"
+                  type="email"
                         {...field}
-                      />
+                />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -82,13 +82,13 @@ export function LoginForm({
                   <FormItem>
                     <div className="flex items-center justify-between">
                       <FormLabel>Password</FormLabel>
-                      <a
-                        href="#"
+                  <a
+                    href="#"
                         className="text-sm text-muted-foreground underline-offset-4 hover:underline"
-                      >
+                  >
                         Forgot password?
-                      </a>
-                    </div>
+                  </a>
+                </div>
                     <FormControl>
                       <Input
                         type="password"
@@ -112,8 +112,8 @@ export function LoginForm({
                 Sign up
               </a>
             </div>
-          </CardContent>
-        </Card>
+        </CardContent>
+      </Card>
       </form>
     </Form>
   );

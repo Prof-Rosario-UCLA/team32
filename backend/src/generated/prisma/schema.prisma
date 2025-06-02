@@ -15,8 +15,28 @@ enum Role {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  email    String @unique
-  password String
-  role     Role   @default(USER)
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  posts     Post[]
+}
+
+model Post {
+  id          String   @id @default(uuid())
+  title       String
+  content     String
+  tags        String[]
+  imageUrl    String?
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author   User @relation(fields: [authorId], references: [id])
+  authorId Int
+
+  likesCount    Int @default(0)
+  commentsCount Int @default(0)
 }
