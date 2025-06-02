@@ -1,34 +1,22 @@
 'use client';
 
 import { SignupForm } from "@/components/signup-form"
-import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
 import { toast, Toaster } from "sonner";
 
 export default function Page() {
-  const router = useRouter();
+  const { signup } = useAuth();
 
   const handleSignup = async (data: { email: string; password: string }) => {
     try {
-      const res = await fetch("http://localhost:3001/api/users/register", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        toast.error(error.message || "Signup failed");
-        return;
-      }
-
+      await signup(data.email, data.password);
       toast.success("Account created successfully!");
-      router.push("/");
-    } catch (err) {
-      console.error("Something went wrong:", err);
-      toast.error("An unexpected error occurred");
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Signup failed. Please try again.");
+      }
     }
   };
   

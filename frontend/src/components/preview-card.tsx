@@ -36,8 +36,8 @@ export function PreviewCard() {
       setTimeout(() => {
         setCurrentPostIndex((prev) => (prev + 1) % previewPosts.length);
         setIsVisible(true);
-      }, 500); // Half of the transition time
-    }, 3000); // Show each post for 3 seconds
+      }, 500); 
+    }, 3000);
 
     return () => clearInterval(interval);
   }, []);

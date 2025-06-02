@@ -1,34 +1,22 @@
 'use client';
 
 import { LoginForm } from "@/components/login-form"
-import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
 import { toast, Toaster } from "sonner";
 
 export default function Page() {
-  const router = useRouter();
+  const { login } = useAuth();
 
   const handleLogin = async (data: { email: string; password: string }) => {
     try {
-      const res = await fetch("http://localhost:3001/api/users/login", {
-        method: "POST",
-        credentials: 'include',
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        toast.error(error.message || "Login failed");
-        return;
-      }
-
+      await login(data.email, data.password);
       toast.success("Login successful!");
-      router.push("/");
-    } catch (err) {
-      console.error("Something went wrong:", err);
-      toast.error("An unexpected error occurred");
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Login failed. Please check your credentials.");
+      }
     }
   };
   

@@ -5,69 +5,48 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, MessageSquare, TrendingUp, Users } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
-import { UserAvatar } from "@/components/user-avatar";
 import { PreviewCard } from "@/components/preview-card";
-import { Showcase } from "@/components/showcase";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { NavBar } from "@/components/nav-bar";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const { user, loading } = useAuth();
+  const router = useRouter();
+
+  // If authenticated, redirect to home page
+  if (user) {
+    router.push('/home');
+    return null;
+  }
 
   return (
-    <main className="h-screen w-full overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
-      <div className="container mx-auto flex h-full flex-col px-4">
-        {/* Header */}
-        <header className="flex items-center justify-between py-6">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">Bruin Hot Take</span>
-          </div>
-          <div className="flex gap-4">
-            <ThemeToggle />
-            {loading ? (
-              <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
-            ) : user ? (
-              <UserAvatar user={user} />
-            ) : (
-              <>
-                <Button asChild variant="ghost">
-                  <Link href="/login">Sign In</Link>
-                </Button>
-                <Button asChild>
-                  <Link href="/signup">Get Started</Link>
-                </Button>
-              </>
-            )}
-          </div>
-        </header>
-
+    <div className="min-h-screen bg-background">
+      <NavBar />
+      <main className="container mx-auto flex h-[calc(100vh-4rem)] flex-col px-4">
         {/* Main Content */}
         <div className="flex flex-1 items-center">
           {loading ? (
             <div className="w-full animate-pulse space-y-4">
-              <div className="h-8 w-3/4 rounded bg-gray-200 dark:bg-gray-700" />
-              <div className="h-4 w-1/2 rounded bg-gray-200 dark:bg-gray-700" />
-            </div>
-          ) : user ? (
-            <div className="w-full">
-              <Showcase />
+              <div className="h-8 w-3/4 rounded bg-muted" />
+              <div className="h-4 w-1/2 rounded bg-muted" />
             </div>
           ) : (
             <div className="grid w-full gap-8 md:grid-cols-2">
               {/* Left Column - Hero */}
               <div className="flex flex-col justify-center space-y-6">
                 <div>
-                  <h2 className="mb-4 text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-5xl">
+                  <h2 className="mb-4 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
                     Share Your{" "}
                     <span className="bg-gradient-to-r from-orange-500 via-red-500 to-orange-500 bg-clip-text text-transparent">
                       Hot Takes
                     </span>
                   </h2>
-                  <p className="text-lg text-gray-600 dark:text-gray-400">
+                  <p className="text-lg text-muted-foreground">
                     Join the conversation with fellow Bruins. Share your thoughts on campus life, academics, and more.
                   </p>
                 </div>
                 <div className="flex gap-4">
-                  <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600">
+                  <Button asChild size="lg">
                     <Link href="/signup">
                       Join Now <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
@@ -80,37 +59,37 @@ export default function Home() {
                 {/* 2x2 Feature Cards */}
                 <div className="grid grid-cols-2 gap-4">
                   {/* Repeat Card 4 times */}
-                  <Card className="border-none bg-white/50 backdrop-blur-sm dark:bg-gray-800/50">
+                  <Card className="bg-card/50 backdrop-blur">
                     <CardContent className="flex flex-col items-center justify-center p-6 text-center">
-                      <MessageSquare className="mb-3 h-8 w-8 text-blue-600 dark:text-blue-400" />
+                      <MessageSquare className="mb-3 h-8 w-8 text-primary" />
                       <h3 className="mb-2 font-semibold">Share Your Hot Takes</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Express your opinions completely unfiltered</p>
+                      <p className="text-sm text-muted-foreground">Express your opinions completely unfiltered</p>
                     </CardContent>
                   </Card>
 
-                  <Card className="border-none bg-white/50 backdrop-blur-sm dark:bg-gray-800/50">
+                  <Card className="bg-card/50 backdrop-blur">
                     <CardContent className="flex flex-col items-center justify-center p-6 text-center">
-                      <TrendingUp className="mb-3 h-8 w-8 text-blue-600 dark:text-blue-400" />
+                      <TrendingUp className="mb-3 h-8 w-8 text-primary" />
                       <h3 className="mb-2 font-semibold">Stay Updated</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Real-time discussions</p>
+                      <p className="text-sm text-muted-foreground">Real-time discussions</p>
                     </CardContent>
                   </Card>
 
-                  <Card className="border-none bg-white/50 backdrop-blur-sm dark:bg-gray-800/50">
+                  <Card className="bg-card/50 backdrop-blur">
                     <CardContent className="flex flex-col items-center justify-center p-6 text-center">
-                      <Users className="mb-3 h-8 w-8 text-blue-600 dark:text-blue-400" />
+                      <Users className="mb-3 h-8 w-8 text-primary" />
                       <h3 className="mb-2 font-semibold">Connect</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Join the UCLA community</p>
+                      <p className="text-sm text-muted-foreground">Join the UCLA community</p>
                     </CardContent>
                   </Card>
 
-                  <Card className="border-none bg-white/50 backdrop-blur-sm dark:bg-gray-800/50">
+                  <Card className="bg-card/50 backdrop-blur">
                     <CardContent className="flex flex-col items-center justify-center p-6 text-center">
-                      <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-                        <span className="text-lg font-bold text-blue-600 dark:text-blue-400">@</span>
+                      <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                        <span className="text-lg font-bold text-primary">@</span>
                       </div>
                       <h3 className="mb-2 font-semibold">UCLA Only</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Exclusive to Bruins</p>
+                      <p className="text-sm text-muted-foreground">Exclusive to Bruins</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -123,12 +102,7 @@ export default function Home() {
             </div>
           )}
         </div>
-
-        {/* Footer */}
-        <footer className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
-          © 2025 Bruin Hot Take
-        </footer>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }
