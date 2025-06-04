@@ -1,9 +1,7 @@
 'use client';
 
-import { Showcase } from "@/components/showcase";
 import { NavBar } from "@/components/nav-bar";
-import { useAuth } from "@/contexts/auth-context";
-import { useRouter } from "next/navigation";
+import { PostCarousel } from "@/components/post-carousel";
 
 export default function HomePage() {
   return (
@@ -11,8 +9,8 @@ export default function HomePage() {
       <NavBar />
       <main className="container mx-auto flex h-[calc(100vh-4rem)] flex-col px-4">
         <div className="flex flex-1 items-center">
-          <div className="w-full">
-            <Showcase />
+          <div className="w-full max-w-2xl mx-auto">
+            <PostCarousel />
           </div>
         </div>
       </main>

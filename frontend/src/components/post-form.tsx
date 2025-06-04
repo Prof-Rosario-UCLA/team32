@@ -1,199 +1,218 @@
 'use client';
 
 import { useState } from 'react';
-import { MapPin } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
-import { AutocompleteInput } from '@/components/auto-complete-input';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { toast } from 'sonner';
-import { MediaUploader } from '@/components/media-uploader';
-
-const MAX_CHARACTERS = 280;
+import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title is too long'),
-  content: z.string().min(1, 'Content is required').max(MAX_CHARACTERS, `Content must be less than ${MAX_CHARACTERS} characters`),
-  image: typeof File !== 'undefined' 
-    ? z.instanceof(File).optional()
-    : z.any().optional(),  location: z.string().optional(),
-  date: z.date(),
+  content: z.string().min(1, 'Content is required').max(1000, 'Content is too long'),
+  imageUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  tags: z.string()
 });
 
-type FormValues = z.infer<typeof formSchema>;
-
 export function PostForm() {
+  const router = useRouter();
+  const [tagInput, setTagInput] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedMedia, setSelectedMedia] = useState<File | null>(null);
-  const [fileInputReset, setFileInputReset] = useState(0);
-  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
 
-  const form = useForm<FormValues>({
+  const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: '',
       content: '',
-      date: new Date(),
+      imageUrl: '',
+      tags: '',
     },
   });
 
- const handleMediaChange = (file: File) => {
-  if (file) {
-    setSelectedMedia(file);
-    form.setValue("image", file); // Update form value if needed
-    
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (typeof reader.result === 'string' || reader.result === null) {
-        setMediaPreview(reader.result);
+  const addTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && tagInput.trim()) {
+      e.preventDefault();
+      const newTag = tagInput.trim().toLowerCase();
+      if (!tags.includes(newTag)) {
+        setTags([...tags, newTag]);
+        form.setValue('tags', [...tags, newTag].join(','));
       }
-    };
-    reader.readAsDataURL(file);
-  }
-};
-
-  const handleRemoveMedia = () => {
-    setSelectedMedia(null);
-    setMediaPreview(null);
-    setFileInputReset(prev => prev + 1);
+      setTagInput('');
+    }
   };
 
-  const onSubmit = async (values: FormValues) => {
-    setIsSubmitting(true);
+  const removeTag = (tagToRemove: string) => {
+    const newTags = tags.filter(tag => tag !== tagToRemove);
+    setTags(newTags);
+    form.setValue('tags', newTags.join(','));
+  };
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (tags.length === 0) {
+      toast.error('Please add at least one tag');
+      return;
+    }
 
     try {
-      const formData = new FormData();
-      formData.append('title', values.title);
-      formData.append('content', values.content);
-      if (selectedMedia) {
-        formData.append('media', selectedMedia);
+      setIsSubmitting(true);
+      console.log('Submitting post with values:', {
+        title: values.title,
+        content: values.content,
+        imageUrl: values.imageUrl || null,
+        tags,
+      });
+
+      const response = await fetch('http://localhost:3001/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: values.title,
+          content: values.content,
+          imageUrl: values.imageUrl || null,
+          tags,
+        }),
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to create post');
       }
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Creating post:', { ...values, media: selectedMedia });
-      
-      // Reset form
-      form.reset();
-      handleRemoveMedia();
-
       toast.success('Post created successfully!');
+      router.push('/home');
     } catch (error) {
       console.error('Error creating post:', error);
-      toast.error('Failed to create post. Please try again.');
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+      }
+      toast.error(error instanceof Error ? error.message : 'Failed to create post. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const remainingCharacters = MAX_CHARACTERS - (form.watch('content')?.length || 0);
-
   return (
-    <div className="max-w-2xl mx-auto p-4">
-      <Card>
-        <CardContent className="pt-6">
-          <Form {...form}>
-            {/* Show the date with Time*/}
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input
-                        placeholder="Add a title..."
-                        className="text-xl font-semibold border-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="location"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <AutocompleteInput
-                        value={field.value || ''}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        placeholder="Add a location at UCLA (optional)"
-                        dataSource="/data/locations.txt"
-                        icon={<MapPin className="h-4 w-4" />}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <div className="relative">
-                        <Textarea
-                          placeholder="What's happening?"
-                          className="text-lg border-none focus-visible:ring-0 focus-visible:ring-offset-0 resize-none"
-                          rows={4}
-                          {...field}
-                        />
-                        <div className="absolute bottom-2 right-2 text-sm text-muted-foreground">
-                          {remainingCharacters}
-                        </div>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Media Preview */}
-              {mediaPreview && (
-                <div className="relative">
-                  <img
-                    src={mediaPreview}
-                    alt="Preview"
-                    className="max-h-96 rounded-lg object-contain"
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute top-2 right-2 h-8 w-8 rounded-full"
-                    onClick={handleRemoveMedia} // Use the new function
-                  >
-                    ×
-                  </Button>
-                </div>
+    <Card className="w-full max-w-2xl mx-auto">
+      <CardHeader>
+        <CardTitle>Create a New Post</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter your post title" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-              {/* Action Buttons */}
-              <div className="flex items-center justify-between pt-4 border-t">
-                <MediaUploader onFileChange={handleMediaChange} resetTrigger={fileInputReset} />
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || !form.formState.isValid}
-                  className="rounded-full"
-                >
-                  {isSubmitting ? 'Posting...' : 'Post'}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-    </div>
+            />
+
+            <FormField
+              control={form.control}
+              name="content"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Content</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Share your hot take..."
+                      className="min-h-[200px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="imageUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Image URL (optional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="https://example.com/image.jpg" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormItem>
+              <FormLabel>Tags</FormLabel>
+              <FormControl>
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Add tags (press Enter)"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={addTag}
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    {tags.map((tag) => (
+                      <Badge
+                        key={tag}
+                        variant="secondary"
+                        className="flex items-center gap-1"
+                      >
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => removeTag(tag)}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+
+            <div className="flex justify-end gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.back()}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Creating...' : 'Create Post'}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 }

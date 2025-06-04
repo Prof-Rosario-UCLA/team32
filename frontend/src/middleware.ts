@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  const isAuthenticated = request.cookies.has('token') // this shit right?
+  const isAuthenticated = request.cookies.has('token') // this shit right? yes it is
 
   // Check if the request is for a protected route
   if (request.nextUrl.pathname.startsWith('/(protected)')) {
