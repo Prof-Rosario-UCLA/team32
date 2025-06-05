@@ -143,6 +143,15 @@ exports.Prisma.PostScalarFieldEnum = {
   commentsCount: 'commentsCount'
 };
 
+exports.Prisma.CommentScalarFieldEnum = {
+  id: 'id',
+  content: 'content',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  authorId: 'authorId',
+  postId: 'postId'
+};
+
 exports.Prisma.LikeScalarFieldEnum = {
   id: 'id',
   createdAt: 'createdAt',
@@ -172,6 +181,7 @@ exports.Role = exports.$Enums.Role = {
 exports.Prisma.ModelName = {
   User: 'User',
   Post: 'Post',
+  Comment: 'Comment',
   Like: 'Like'
 };
 
