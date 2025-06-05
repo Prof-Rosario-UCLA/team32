@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { LoginForm } from "@/components/login-form";
 import { SignupForm } from "@/components/signup-form";
 import { useAuth } from "@/contexts/auth-context";
@@ -65,18 +65,12 @@ export function AuthModals({
     <>
       <Dialog open={isLoginOpen} onOpenChange={onLoginClose}>
         <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Sign In</DialogTitle>
-          </DialogHeader>
           <LoginForm onSubmit={handleLogin} onSignupClick={handleSwitchToSignup} />
         </DialogContent>
       </Dialog>
 
       <Dialog open={isSignupOpen} onOpenChange={onSignupClose}>
         <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Create Account</DialogTitle>
-          </DialogHeader>
           <SignupForm onSubmit={handleSignup} onLoginClick={handleSwitchToLogin} />
         </DialogContent>
       </Dialog>
