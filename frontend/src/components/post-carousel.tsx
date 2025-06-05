@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import { CommentDialog } from '@/components/comment-dialog';
 
 interface Post {
   id: string;
@@ -205,14 +206,17 @@ export function PostCarousel() {
                     <Heart className={`h-4 w-4 ${post.liked ? "fill-current" : ""}`} />
                     <span>{post.likesCount}</span>
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex items-center gap-1"
-                  >
-                    <MessageSquare className="h-4 w-4" />
-                    <span>{post.commentsCount}</span>
-                  </Button>
+                  <CommentDialog
+                    postId={post.id}
+                    commentsCount={post.commentsCount}
+                    onCommentAdded={() => {
+                      setPosts(prev => prev.map(p => 
+                        p.id === post.id 
+                          ? { ...p, commentsCount: p.commentsCount + 1 }
+                          : p
+                      ));
+                    }}
+                  />
                 </div>
               </CardContent>
             </Card>

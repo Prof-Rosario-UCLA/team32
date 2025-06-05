@@ -15,14 +15,15 @@ enum Role {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
   password  String
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  role      Role      @default(USER)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   posts     Post[]
   likes     Like[]
+  comments  Comment[]
 }
 
 model Post {
@@ -39,8 +40,21 @@ model Post {
   authorId Int
 
   likes         Like[]
-  likesCount    Int    @default(0)
-  commentsCount Int    @default(0)
+  likesCount    Int       @default(0)
+  comments      Comment[]
+  commentsCount Int       @default(0)
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author   User   @relation(fields: [authorId], references: [id])
+  authorId Int
+  post     Post   @relation(fields: [postId], references: [id])
+  postId   String
 }
 
 model Like {
