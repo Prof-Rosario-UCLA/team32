@@ -4,6 +4,22 @@ import { verifyToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// List of animals for anonymous names
+const ANIMALS = [
+  'Anonymous Panda', 'Anonymous Fox', 'Anonymous Dolphin', 'Anonymous Eagle',
+  'Anonymous Tiger', 'Anonymous Wolf', 'Anonymous Bear', 'Anonymous Lion',
+  'Anonymous Owl', 'Anonymous Deer', 'Anonymous Rabbit', 'Anonymous Cat',
+  'Anonymous Dog', 'Anonymous Horse', 'Anonymous Elephant', 'Anonymous Giraffe',
+  'Anonymous Penguin', 'Anonymous Koala', 'Anonymous Kangaroo', 'Anonymous Zebra'
+];
+
+// Function to get consistent anonymous name for a user
+function getAnonymousName(userId) {
+  // Use the user's ID to consistently assign the same animal
+  const index = userId % ANIMALS.length;
+  return ANIMALS[index];
+}
+
 // Get posts with pagination, filtering, and search
 router.get('/', async (req, res) => {
   try {
@@ -231,6 +247,95 @@ router.get('/tags', async (req, res) => {
   } catch (error) {
     console.error('Error fetching tags:', error);
     res.status(500).json({ message: 'Error fetching tags' });
+  }
+});
+
+// Get comments for a post
+router.get('/:id/comments', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const comments = await prisma.comment.findMany({
+      where: {
+        postId: id
+      },
+      include: {
+        author: {
+          select: {
+            id: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    // Transform comments to include anonymous names
+    const transformedComments = comments.map(comment => ({
+      ...comment,
+      author: {
+        id: comment.author.id,
+        anonymousName: getAnonymousName(comment.author.id)
+      }
+    }));
+
+    res.json(transformedComments);
+  } catch (error) {
+    console.error('Error fetching comments:', error);
+    res.status(500).json({ message: 'Error fetching comments' });
+  }
+});
+
+// Add a comment to a post
+router.post('/:id/comments', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { content } = req.body;
+    const authorId = req.user.id;
+
+    if (!content?.trim()) {
+      return res.status(400).json({ message: 'Comment content is required' });
+    }
+
+    const comment = await prisma.comment.create({
+      data: {
+        content: content.trim(),
+        authorId,
+        postId: id
+      },
+      include: {
+        author: {
+          select: {
+            id: true
+          }
+        }
+      }
+    });
+
+    // Update post's comment count
+    await prisma.post.update({
+      where: { id },
+      data: {
+        commentsCount: {
+          increment: 1
+        }
+      }
+    });
+
+    // Transform the response to include anonymous name
+    const transformedComment = {
+      ...comment,
+      author: {
+        id: comment.author.id,
+        anonymousName: getAnonymousName(comment.author.id)
+      }
+    };
+
+    res.status(201).json(transformedComment);
+  } catch (error) {
+    console.error('Error creating comment:', error);
+    res.status(500).json({ message: 'Error creating comment' });
   }
 });
 
