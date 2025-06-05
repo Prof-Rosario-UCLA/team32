@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { Flame, Plus } from "lucide-react";
 import { AuthModals } from "@/components/auth-modals";
 import { CreatePostModal } from "@/components/create-post-modal";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 
 export function NavBar() {
   const { user, loading } = useAuth();
@@ -21,8 +22,11 @@ export function NavBar() {
         <div className="container flex h-16 items-center justify-between px-4">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <Flame className="h-6 w-6 text-primary" />
+            <Avatar className="h-8 w-8">
+              <AvatarImage src='/bruinhottake.png' />
+            </Avatar>
             <span className="text-xl font-bold">Bruin Hot Take</span>
+            <Flame className="h-6 w-6 text-primary" />
           </div>
 
           {/* Right side items */}

@@ -72,7 +72,7 @@ router.post('/login', async (req, res) => {
 
     // User does not exist
     if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      return res.status(401).json({ message: 'User with this email does not exist' });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
