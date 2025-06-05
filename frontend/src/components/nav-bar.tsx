@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserAvatar } from "@/components/user-avatar";
 import { useAuth } from "@/contexts/auth-context";
-import { Flame, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
+// import { Flame } from "lucide-react";
 import { AuthModals } from "@/components/auth-modals";
 import { CreatePostModal } from "@/components/create-post-modal";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
@@ -26,7 +27,7 @@ export function NavBar() {
               <AvatarImage src='/bruinhottake.png' />
             </Avatar>
             <span className="text-xl font-bold">Bruin Hot Take</span>
-            <Flame className="h-6 w-6 text-primary" />
+            {/*<Flame className="h-6 w-6 text-primary" />*/}
           </div>
 
           {/* Right side items */}
