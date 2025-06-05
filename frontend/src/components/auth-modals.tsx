@@ -1,0 +1,85 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { LoginForm } from "@/components/login-form";
+import { SignupForm } from "@/components/signup-form";
+import { useAuth } from "@/contexts/auth-context";
+import { toast } from "sonner";
+
+interface AuthModalsProps {
+  isLoginOpen: boolean;
+  isSignupOpen: boolean;
+  onLoginClose: () => void;
+  onSignupClose: () => void;
+  onLoginOpen: () => void;
+  onSignupOpen: () => void;
+}
+
+export function AuthModals({ 
+  isLoginOpen, 
+  isSignupOpen, 
+  onLoginClose, 
+  onSignupClose, 
+  onLoginOpen,
+  onSignupOpen,
+}: AuthModalsProps) {
+  const { login, signup } = useAuth();
+
+  const handleLogin = async (data: { email: string; password: string }) => {
+    try {
+      await login(data.email, data.password);
+      toast.success("Login successful!");
+      onLoginClose();
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Login failed. Please check your credentials.");
+      }
+    }
+  };
+
+  const handleSignup = async (data: { email: string; password: string }) => {
+    try {
+      await signup(data.email, data.password);
+      toast.success("Account created successfully!");
+      onSignupClose();
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Signup failed. Please try again.");
+      }
+    }
+  };
+
+  const handleSwitchToSignup = () => {
+    onLoginClose();
+    onSignupOpen();
+  };
+
+  const handleSwitchToLogin = () => {
+    onSignupClose();
+    onLoginOpen();
+  };
+
+  return (
+    <>
+      <Dialog open={isLoginOpen} onOpenChange={onLoginClose}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Sign In</DialogTitle>
+          </DialogHeader>
+          <LoginForm onSubmit={handleLogin} onSignupClick={handleSwitchToSignup} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isSignupOpen} onOpenChange={onSignupClose}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Create Account</DialogTitle>
+          </DialogHeader>
+          <SignupForm onSubmit={handleSignup} onLoginClick={handleSwitchToLogin} />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+} 

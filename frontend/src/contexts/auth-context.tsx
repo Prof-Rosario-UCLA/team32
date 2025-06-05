@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       await checkAuth();
-      router.push('/home');
+      router.push('/');
     } catch (error) {
       setUser(null);
       throw error;
@@ -88,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       await checkAuth();
-      router.push('/home');
+      router.push('/');
     } catch (error) {
       setUser(null);
       throw error;

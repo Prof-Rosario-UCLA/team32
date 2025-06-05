@@ -28,7 +28,11 @@ const formSchema = z.object({
   tags: z.string()
 });
 
-export function PostForm() {
+interface PostFormProps {
+  onSuccess?: () => void;
+}
+
+export function PostForm({ onSuccess }: PostFormProps) {
   const router = useRouter();
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
@@ -98,7 +102,11 @@ export function PostForm() {
       }
 
       toast.success('Post created successfully!');
-      router.push('/home');
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.push('/');
+      }
     } catch (error) {
       console.error('Error creating post:', error);
       if (error instanceof Error) {

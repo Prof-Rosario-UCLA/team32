@@ -24,11 +24,13 @@ import {
 type LoginFormProps = {
   onSubmit: (data: { email: string; password: string }) => void;
   className?: string;
+  onSignupClick?: () => void;
 }
 
 export function LoginForm({
   className,
   onSubmit,
+  onSignupClick,
 }: LoginFormProps) {
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -39,7 +41,10 @@ export function LoginForm({
   });
 
   const handleSubmit = (values: z.infer<typeof loginSchema>) => {
-    onSubmit(values);
+    onSubmit({
+      email: values.email,
+      password: values.password,
+    });
   };
 
   return (
@@ -48,14 +53,14 @@ export function LoginForm({
         className={cn("flex flex-col gap-6", className)} 
         onSubmit={form.handleSubmit(handleSubmit)}
       >
-      <Card>
-        <CardHeader>
-          <CardTitle>Login to your account</CardTitle>
-          <CardDescription>
-              Enter your UCLA email to login to your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+        <Card>
+          <CardHeader>
+            <CardTitle>Sign In</CardTitle>
+            <CardDescription>
+              Enter your credentials to access your account
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
             <div className="flex flex-col gap-6">
               <FormField
                 control={form.control}
@@ -64,11 +69,11 @@ export function LoginForm({
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                <Input
+                      <Input
                         placeholder="m@g.ucla.edu"
-                  type="email"
+                        type="email"
                         {...field}
-                />
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -80,15 +85,7 @@ export function LoginForm({
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex items-center justify-between">
-                      <FormLabel>Password</FormLabel>
-                  <a
-                    href="#"
-                        className="text-sm text-muted-foreground underline-offset-4 hover:underline"
-                  >
-                        Forgot password?
-                  </a>
-                </div>
+                    <FormLabel>Password</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
@@ -102,18 +99,23 @@ export function LoginForm({
 
               <div className="flex flex-col gap-3">
                 <Button type="submit" className="w-full">
-                  Login
+                  Sign in
                 </Button>
               </div>
             </div>
+            
             <div className="mt-4 text-center text-sm">
               Don&apos;t have an account?{" "}
-              <a href="/signup" className="underline underline-offset-4">
+              <button
+                type="button"
+                onClick={onSignupClick}
+                className="text-primary underline underline-offset-4 hover:text-primary/80"
+              >
                 Sign up
-              </a>
+              </button>
             </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
       </form>
     </Form>
   );
