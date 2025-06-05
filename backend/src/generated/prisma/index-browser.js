@@ -125,6 +125,8 @@ exports.Prisma.UserScalarFieldEnum = {
   email: 'email',
   password: 'password',
   role: 'role',
+  resetToken: 'resetToken',
+  resetTokenExpiry: 'resetTokenExpiry',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -141,6 +143,15 @@ exports.Prisma.PostScalarFieldEnum = {
   authorId: 'authorId',
   likesCount: 'likesCount',
   commentsCount: 'commentsCount'
+};
+
+exports.Prisma.CommentScalarFieldEnum = {
+  id: 'id',
+  content: 'content',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  authorId: 'authorId',
+  postId: 'postId'
 };
 
 exports.Prisma.LikeScalarFieldEnum = {
@@ -172,6 +183,7 @@ exports.Role = exports.$Enums.Role = {
 exports.Prisma.ModelName = {
   User: 'User',
   Post: 'Post',
+  Comment: 'Comment',
   Like: 'Like'
 };
 
