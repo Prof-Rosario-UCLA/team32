@@ -3,13 +3,19 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageSquare, Search, X } from "lucide-react";
+import { Heart, MessageSquare, Search, X, ChevronDown } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { CommentDialog } from '@/components/comment-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Post {
   id: string;
@@ -37,12 +43,26 @@ interface PostsResponse {
   };
 }
 
+type SortOption = {
+  label: string;
+  sortBy: string;
+  order: 'asc' | 'desc';
+};
+
+const SORT_OPTIONS: SortOption[] = [
+  { label: 'Most Recent', sortBy: 'createdAt', order: 'desc' },
+  { label: 'Oldest First', sortBy: 'createdAt', order: 'asc' },
+  { label: 'Most Liked', sortBy: 'likesCount', order: 'desc' },
+  { label: 'Most Comments', sortBy: 'commentsCount', order: 'desc' },
+];
+
 export function PostCarousel() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [sortOption, setSortOption] = useState<SortOption>(SORT_OPTIONS[0]);
   const { user } = useAuth();
 
   const fetchPosts = async () => {
@@ -50,8 +70,8 @@ export function PostCarousel() {
       setLoading(true);
       const queryParams = new URLSearchParams({
         limit: '10',
-        sortBy: 'createdAt',
-        order: 'desc',
+        sortBy: sortOption.sortBy,
+        order: sortOption.order,
         ...(searchQuery && { search: searchQuery }),
         ...(selectedTags.length > 0 && { tags: selectedTags.join(',') })
       });
@@ -123,20 +143,40 @@ export function PostCarousel() {
   useEffect(() => {
     fetchPosts();
     fetchTags();
-  }, [searchQuery, selectedTags]);
+  }, [searchQuery, selectedTags, sortOption]);
 
   return (
     <div className="space-y-6">
-      {/* Search and Filter Section */}
+      {/* Search, Sort, and Filter Section */}
       <div className="space-y-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search posts..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
+        <div className="flex gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search posts..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="w-[180px] justify-between">
+                {sortOption.label}
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {SORT_OPTIONS.map((option) => (
+                <DropdownMenuItem
+                  key={`${option.sortBy}-${option.order}`}
+                  onClick={() => setSortOption(option)}
+                >
+                  {option.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         
         <ScrollArea className="w-full whitespace-nowrap">
