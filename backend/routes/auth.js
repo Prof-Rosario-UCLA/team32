@@ -77,18 +77,34 @@ router.post('/register', async (req, res) => {
       },
     });
 
-    const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '1h' });
+    // Fetch the user again to ensure we have the complete user object
+    const createdUser = await prisma.user.findUnique({
+      where: { id: user.id }
+    });
+
+    if (!createdUser) {
+      throw new Error("Failed to create user");
+    }
+
+    const token = jwt.sign(createdUser, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.cookie('token', token, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: 60 * 60, 
+      maxAge: 60 * 60 * 1000, // 1 hour in milliseconds
     });
 
-    return res.status(200).json({ message: `Registered successfully for ${email}` });
+    return res.status(200).json({ 
+      message: `Registered successfully for ${email}`,
+      user: {
+        id: createdUser.id,
+        email: createdUser.email,
+        role: createdUser.role
+      }
+    });
   }
   catch (error) {
-    console.error("Registration failed")
+    console.error("Registration failed:", error);
     return res.status(500).json({ message: "Registration failed" });
   }
 });
