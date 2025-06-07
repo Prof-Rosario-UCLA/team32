@@ -334,7 +334,6 @@ export function PostCarousel() {
          
         </ScrollShadow>
       </div>
-
       {/* Post Detail Modal */}
       {selectedPost && (
         <PostDetail

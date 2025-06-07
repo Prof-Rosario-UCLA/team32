@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -16,16 +16,24 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { X } from 'lucide-react';
+import { X, Image as ImageIcon, Mic, Square, Upload, Camera } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils"
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title is too long'),
   content: z.string().min(1, 'Content is required').max(1000, 'Content is too long'),
   imageUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
-  tags: z.string()
+  tags: z.string(),
+  mediaType: z.enum(['none', 'image', 'audio']).optional(),
+  mediaFile: z.any().optional(),
 });
 
 interface PostFormProps {
@@ -38,6 +46,16 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mediaType, setMediaType] = useState<'none' | 'image' | 'audio'>('none');
+  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,6 +64,7 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
       content: '',
       imageUrl: '',
       tags: '',
+      mediaType: 'none',
     },
   });
 
@@ -67,6 +86,170 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
     form.setValue('tags', newTags.join(','));
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setMediaPreview(reader.result as string);
+      setMediaType('image');
+      form.setValue('mediaType', 'image');
+      form.setValue('mediaFile', file);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (mediaPreview && mediaType === 'audio') {
+        URL.revokeObjectURL(mediaPreview);
+      }
+    };
+  }, [mediaPreview, mediaType]);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        if (mediaPreview && mediaType === 'audio') {
+          URL.revokeObjectURL(mediaPreview);
+        }
+
+        const audioBlob = new Blob(audioChunksRef.current, { 
+          type: 'audio/webm;codecs=opus' 
+        });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setMediaPreview(audioUrl);
+        form.setValue('mediaFile', audioBlob);
+      };
+
+      mediaRecorder.start(1000);
+      setIsRecording(true);
+      setMediaType('audio');
+      form.setValue('mediaType', 'audio');
+    } catch (error) {
+      toast.error('Failed to access microphone');
+      console.error('Error accessing microphone:', error);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      try {
+        mediaRecorderRef.current.stop();
+        mediaRecorderRef.current.stream.getTracks().forEach(track => {
+          track.stop();
+          track.enabled = false;
+        });
+        setIsRecording(false);
+      } catch (error) {
+        console.error('Error stopping recording:', error);
+        toast.error('Failed to stop recording');
+      }
+    }
+  };
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false 
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      setShowCamera(true);
+    } catch (error) {
+      toast.error('Failed to access camera');
+      console.error('Error accessing camera:', error);
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    setShowCamera(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+
+      if (context) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const file = new File([blob], `camera-photo-${Date.now()}.jpg`, { 
+              type: 'image/jpeg',
+              lastModified: Date.now()
+            });
+
+            if (!file.type.startsWith('image/')) {
+              toast.error('Failed to process photo');
+              return;
+            }
+
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              setMediaPreview(reader.result as string);
+              setMediaType('image');
+              form.setValue('mediaType', 'image');
+              form.setValue('mediaFile', file);
+              stopCamera();
+              toast.success('Photo captured successfully!');
+            };
+            reader.readAsDataURL(file);
+          } else {
+            toast.error('Failed to capture photo');
+          }
+        }, 'image/jpeg', 0.9);
+      }
+    }
+  };
+
+  const removeMedia = () => {
+    if (showCamera) {
+      stopCamera();
+    }
+    if (mediaPreview && mediaType === 'audio') {
+      URL.revokeObjectURL(mediaPreview);
+    }
+    setMediaPreview(null);
+    setMediaType('none');
+    form.setValue('mediaType', 'none');
+    form.setValue('mediaFile', null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (tags.length === 0) {
       toast.error('Please add at least one tag');
@@ -75,24 +258,21 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
 
     try {
       setIsSubmitting(true);
-      console.log('Submitting post with values:', {
-        title: values.title,
-        content: values.content,
-        imageUrl: values.imageUrl || null,
-        tags,
-      });
+
+      const formData = new FormData();
+      formData.append('title', values.title);
+      formData.append('content', values.content);
+      formData.append('tags', JSON.stringify(tags));
+      
+      if (mediaType === 'image' && values.mediaFile) {
+        formData.append('image', values.mediaFile);
+      } else if (mediaType === 'audio' && values.mediaFile) {
+        formData.append('audio', values.mediaFile);
+      }
 
       const response = await fetch('http://localhost:3001/api/posts', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: values.title,
-          content: values.content,
-          imageUrl: values.imageUrl || null,
-          tags,
-        }),
+        body: formData,
         credentials: 'include',
       });
 
@@ -110,9 +290,6 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
       }
     } catch (error) {
       console.error('Error creating post:', error);
-      if (error instanceof Error) {
-        console.error('Error details:', error.message);
-      }
       toast.error(error instanceof Error ? error.message : 'Failed to create post. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -168,19 +345,137 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="imageUrl"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Image URL (optional)</FormLabel>
-                <FormControl>
-                  <Input placeholder="https://example.com/image.jpg" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <FormItem>
+            <FormLabel>Add Media (Optional)</FormLabel>
+            <div className="flex gap-4">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                ref={fileInputRef}
+                className="hidden"
+                id="image-upload"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-2"
+              >
+                <ImageIcon className="h-4 w-4" />
+                Upload Photo
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={startCamera}
+                className="flex items-center gap-2"
+              >
+                <Camera className="h-4 w-4" />
+                Take Photo
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={isRecording ? stopRecording : startRecording}
+                className={cn(
+                  "flex items-center gap-2",
+                  isRecording && "bg-red-100 text-red-600 hover:bg-red-200"
+                )}
+              >
+                {isRecording ? (
+                  <>
+                    <Square className="h-4 w-4" />
+                    Stop Recording
+                  </>
+                ) : (
+                  <>
+                    <Mic className="h-4 w-4" />
+                    Record Voice Memo
+                  </>
+                )}
+              </Button>
+            </div>
+
+            <Dialog open={showCamera} onOpenChange={(open) => {
+              if (!open) stopCamera();
+            }}>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Take a Photo</DialogTitle>
+                </DialogHeader>
+                <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-black">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    className="h-full w-full object-cover"
+                  />
+                  <canvas ref={canvasRef} className="hidden" />
+                  <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={stopCamera}
+                      className="bg-black/50 text-white hover:bg-black/70"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={capturePhoto}
+                      className="bg-white text-black hover:bg-gray-100"
+                    >
+                      Capture
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            {mediaPreview && (
+              <div className="mt-4 relative">
+                {mediaType === 'image' ? (
+                  <div className="relative w-full max-w-md">
+                    <img
+                      src={mediaPreview}
+                      alt="Preview"
+                      className="rounded-lg w-full h-48 object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={removeMedia}
+                      className="absolute top-2 right-2 p-1 bg-black/50 rounded-full text-white hover:bg-black/70"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : mediaType === 'audio' && (
+                  <div className="relative w-full max-w-md">
+                    <audio
+                      src={mediaPreview}
+                      controls
+                      className="w-full"
+                      preload="metadata"
+                      onError={(e) => {
+                        console.error('Audio playback error:', e);
+                        toast.error('Failed to play audio');
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={removeMedia}
+                      className="absolute top-2 right-2 p-1 bg-black/50 rounded-full text-white hover:bg-black/70"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
-          />
+          </FormItem>
 
           <FormItem>
             <FormLabel>Tags</FormLabel>
@@ -214,12 +509,6 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
             </FormControl>
             <FormMessage />
           </FormItem>
-
-          {form.formState.errors.root && (
-            <div className="text-sm text-red-500">
-              {form.formState.errors.root.message}
-            </div>
-          )}
 
           <div className="flex flex-col gap-3">
             <Button type="submit" className="w-full" disabled={isSubmitting}>
