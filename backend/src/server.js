@@ -15,13 +15,13 @@ const port = process.env.PORT || 3001;
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5,
+  max: 25,
 });
 
 const speedLimiter = slowDown({
   windowMs: 15 * 60 * 1000,
   delayAfter: 1,
-  delayMs: () => 2000,
+  delayMs: () => 1000,
 });
 
 // Middleware
@@ -33,14 +33,28 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(limiter);
 app.use(speedLimiter);
-app.use(helmet.contentSecurityPolicy({
-  directives: {
-    defaultSrc: ["'self'"],
-    scriptSrc: ["'self'"],
-    objectSrc: ["'none'"],
-    upgradeInsecureRequests: [],
-  }
-}));
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      imgSrc: ["'self'"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      mediaSrc: ["'self'"],
+      upgradeInsecureRequests: [],
+    },
+  })
+);
+app.use(
+  helmet.hsts({
+    maxAge: 63072000,
+    includeSubDomains: true,
+    preload: true,
+  })
+);
+
 
 // Routes
 app.use('/api/users', authRoutes);
