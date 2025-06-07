@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -105,25 +105,43 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
     reader.readAsDataURL(file);
   };
 
+  useEffect(() => {
+    return () => {
+      if (mediaPreview && mediaType === 'audio') {
+        URL.revokeObjectURL(mediaPreview);
+      }
+    };
+  }, [mediaPreview, mediaType]);
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
       mediaRecorder.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
       };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        if (mediaPreview && mediaType === 'audio') {
+          URL.revokeObjectURL(mediaPreview);
+        }
+
+        const audioBlob = new Blob(audioChunksRef.current, { 
+          type: 'audio/webm;codecs=opus' 
+        });
         const audioUrl = URL.createObjectURL(audioBlob);
         setMediaPreview(audioUrl);
         form.setValue('mediaFile', audioBlob);
       };
 
-      mediaRecorder.start();
+      mediaRecorder.start(1000);
       setIsRecording(true);
       setMediaType('audio');
       form.setValue('mediaType', 'audio');
@@ -135,9 +153,17 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-      setIsRecording(false);
+      try {
+        mediaRecorderRef.current.stop();
+        mediaRecorderRef.current.stream.getTracks().forEach(track => {
+          track.stop();
+          track.enabled = false;
+        });
+        setIsRecording(false);
+      } catch (error) {
+        console.error('Error stopping recording:', error);
+        toast.error('Failed to stop recording');
+      }
     }
   };
 
@@ -173,23 +199,18 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
       const context = canvas.getContext('2d');
 
       if (context) {
-        // Set canvas dimensions to match video
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         
-        // Draw the current video frame on the canvas
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         
-        // Convert canvas to blob
         canvas.toBlob((blob) => {
           if (blob) {
-            // Create a File object from the blob, similar to an uploaded file
             const file = new File([blob], `camera-photo-${Date.now()}.jpg`, { 
               type: 'image/jpeg',
               lastModified: Date.now()
             });
 
-            // Handle the file just like an uploaded photo
             if (!file.type.startsWith('image/')) {
               toast.error('Failed to process photo');
               return;
@@ -208,7 +229,7 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
           } else {
             toast.error('Failed to capture photo');
           }
-        }, 'image/jpeg', 0.9); // Use 0.9 quality for better image quality
+        }, 'image/jpeg', 0.9);
       }
     }
   };
@@ -216,6 +237,9 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
   const removeMedia = () => {
     if (showCamera) {
       stopCamera();
+    }
+    if (mediaPreview && mediaType === 'audio') {
+      URL.revokeObjectURL(mediaPreview);
     }
     setMediaPreview(null);
     setMediaType('none');
@@ -235,7 +259,6 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
     try {
       setIsSubmitting(true);
 
-      // Create FormData to handle file upload
       const formData = new FormData();
       formData.append('title', values.title);
       formData.append('content', values.content);
@@ -322,7 +345,6 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
             )}
           />
 
-          {/* Media Upload Section */}
           <FormItem>
             <FormLabel>Add Media (Optional)</FormLabel>
             <div className="flex gap-4">
@@ -377,7 +399,6 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
               </Button>
             </div>
 
-            {/* Camera Dialog */}
             <Dialog open={showCamera} onOpenChange={(open) => {
               if (!open) stopCamera();
             }}>
@@ -414,7 +435,6 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
               </DialogContent>
             </Dialog>
 
-            {/* Media Preview */}
             {mediaPreview && (
               <div className="mt-4 relative">
                 {mediaType === 'image' ? (
@@ -438,6 +458,11 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
                       src={mediaPreview}
                       controls
                       className="w-full"
+                      preload="metadata"
+                      onError={(e) => {
+                        console.error('Audio playback error:', e);
+                        toast.error('Failed to play audio');
+                      }}
                     />
                     <button
                       type="button"
