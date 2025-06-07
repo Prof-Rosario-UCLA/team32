@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { PostForm } from "@/components/post-form";
 
 interface CreatePostModalProps {
@@ -10,6 +10,7 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[800px]">
+        <DialogTitle></DialogTitle>
         <PostForm onSuccess={onClose} />
       </DialogContent>
     </Dialog>
