@@ -3,11 +3,11 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, Search, X, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
-import { useAuth } from "@/contexts/auth-context";
+import { Heart, Search, X, ChevronDown} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { ScrollShadow } from './ui/scroll-shadow';
+import { ScrollArea } from '@radix-ui/react-scroll-area';
 import { toast } from "sonner";
 import { CommentDialog } from '@/components/comment-dialog';
 import { PostDetail } from '@/components/post-detail';
@@ -66,8 +66,7 @@ export function PostCarousel() {
   const [sortOption, setSortOption] = useState<SortOption>(SORT_OPTIONS[0]);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const { user } = useAuth();
+  const [hasMore, setHasMore] = useState(true); 
   const observer = useRef<IntersectionObserver | null>(null);
   const lastPostRef = useCallback((node: HTMLDivElement | null) => {
     if (loading) return;
@@ -114,6 +113,7 @@ export function PostCarousel() {
       }
     } catch (error) {
       toast.error("Failed to like post");
+      console.log("Failed to like post: " + error);
     }
   };
 
@@ -159,6 +159,7 @@ export function PostCarousel() {
       setHasMore(data.posts.length === 10);
     } catch (error) {
       toast.error('Failed to fetch posts');
+      console.log("Failed to fetch posts: " +  error);
     } finally {
       setLoading(false);
     }
@@ -174,6 +175,7 @@ export function PostCarousel() {
       setAvailableTags(data);
     } catch (error) {
       toast.error('Failed to fetch tags');
+      console.log("Failed to fetch tags: " + error);
     }
   };
 
@@ -254,82 +256,83 @@ export function PostCarousel() {
               </Badge>
             ))}
           </div>
-          <ScrollBar orientation="horizontal" />
+         
         </ScrollArea>
       </div>
 
       {/* Posts Stack */}
       <div className="flex-1 flex flex-col min-h-0">
-        <ScrollArea className="flex-1 px-4">
-          <div className="space-y-4 pb-4">
-            {posts.map((post, index) => (
-              <Card 
-                key={post.id}
-                ref={index === posts.length - 1 ? lastPostRef : null}
-                className="bg-card/50 backdrop-blur cursor-pointer hover:bg-card/60 transition-colors"
-                onClick={() => handlePostClick(post)}
-              >
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <div>
-                    <h3 className="text-lg font-semibold line-clamp-1">{post.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(post.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    {post.tags.map(tag => (
-                      <Badge
-                        key={tag}
-                        variant="secondary"
-                        className="cursor-pointer"
+        <ScrollShadow className="flex-1 px-4 relative">
+            <div className="space-y-4 pb-4">
+              {posts.map((post, index) => (
+                <Card 
+                  key={post.id}
+                  ref={index === posts.length - 1 ? lastPostRef : null}
+                  className="bg-card/50 backdrop-blur cursor-pointer hover:bg-card/60 transition-colors"
+                  onClick={() => handlePostClick(post)}
+                >
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <div>
+                      <h3 className="text-lg font-semibold line-clamp-1">{post.title}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(post.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      {post.tags.map(tag => (
+                        <Badge
+                          key={tag}
+                          variant="secondary"
+                          className="cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleTag(tag);
+                          }}
+                        >
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="mb-4 line-clamp-2">{post.content}</p>
+                    {post.imageUrl && (
+                      <img 
+                        src={post.imageUrl} 
+                        alt={post.title}
+                        className="mb-4 rounded-lg object-cover w-full h-48"
+                      />
+                    )}
+                    <div className="flex items-center gap-4">
+                      <Button
+                        variant={post.liked ? "default" : "ghost"}
+                        size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          toggleTag(tag);
+                          handlePostLike(post.id);
                         }}
+                        className="flex items-center gap-1"
                       >
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="mb-4 line-clamp-2">{post.content}</p>
-                  {post.imageUrl && (
-                    <img 
-                      src={post.imageUrl} 
-                      alt={post.title}
-                      className="mb-4 rounded-lg object-cover w-full h-48"
-                    />
-                  )}
-                  <div className="flex items-center gap-4">
-                    <Button
-                      variant={post.liked ? "default" : "ghost"}
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePostLike(post.id);
-                      }}
-                      className="flex items-center gap-1"
-                    >
-                      <Heart className={`h-4 w-4 ${post.liked ? "fill-current" : ""}`} />
-                      <span>{post.likesCount}</span>
-                    </Button>
-                    <CommentDialog
-                      postId={post.id}
-                      commentsCount={post.commentsCount}
-                      onCommentAdded={() => handleCommentAdded(post.id)}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            {loading && (
-              <div className="flex justify-center py-4">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-              </div>
-            )}
-          </div>
-        </ScrollArea>
+                        <Heart className={`h-4 w-4 ${post.liked ? "fill-current" : ""}`} />
+                        <span>{post.likesCount}</span>
+                      </Button>
+                      <CommentDialog
+                        postId={post.id}
+                        commentsCount={post.commentsCount}
+                        onCommentAdded={() => handleCommentAdded(post.id)}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              {loading && (
+                <div className="flex justify-center py-4">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                </div>
+              )}
+            </div>
+         
+        </ScrollShadow>
       </div>
 
       {/* Post Detail Modal */}

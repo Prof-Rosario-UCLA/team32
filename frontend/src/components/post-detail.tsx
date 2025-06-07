@@ -2,7 +2,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollShadow } from "@/components/ui/scroll-shadow"
 import { CommentDialog } from '@/components/comment-dialog';
 import { CommentsSection } from '@/components/comments-section';
 
@@ -46,10 +46,9 @@ export function PostDetail({ post, onClose, onLike, onCommentAdded }: PostDetail
           </div>
         </div>
 
-        {/* Scrollable Content Area */}
         <div className="flex-1 relative">
           <div className="absolute inset-0 pr-4">
-            <ScrollArea className="h-full">
+            <ScrollShadow>
               <div className="px-6 py-4">
                 <p className="whitespace-pre-wrap text-base leading-relaxed">{post.content}</p>
                 {post.imageUrl && (
@@ -60,9 +59,7 @@ export function PostDetail({ post, onClose, onLike, onCommentAdded }: PostDetail
                   />
                 )}
               </div>
-              {/* Gradient fade at bottom */}
-              <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent pointer-events-none" />
-            </ScrollArea>
+            </ScrollShadow>
           </div>
         </div>
 

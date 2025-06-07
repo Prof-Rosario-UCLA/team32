@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollShadow } from "@/components/ui/scroll-shadow";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth-context";
 
@@ -99,26 +100,28 @@ export function CommentsSection({ postId, onCommentAdded }: CommentsSectionProps
         </form>
 
         {/* Comments List */}
-        <ScrollArea className="h-[300px] pr-4">
-          <div className="space-y-4">
-            {comments.map((comment) => (
-              <div key={comment.id} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{comment.author.anonymousName}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(comment.createdAt).toLocaleDateString()}
-                  </span>
+        <ScrollShadow className="h-[300px]">
+          <ScrollArea className="h-full pr-4">
+            <div className="space-y-4">
+              {comments.map((comment) => (
+                <div key={comment.id} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{comment.author.anonymousName}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(comment.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{comment.content}</p>
                 </div>
-                <p className="text-sm text-muted-foreground">{comment.content}</p>
-              </div>
-            ))}
-            {comments.length === 0 && (
-              <p className="text-center text-muted-foreground py-4">
-                No comments yet. Be the first to comment!
-              </p>
-            )}
-          </div>
-        </ScrollArea>
+              ))}
+              {comments.length === 0 && (
+                <p className="text-center text-muted-foreground py-4">
+                  No comments yet. Be the first to comment!
+                </p>
+              )}
+            </div>
+          </ScrollArea>
+        </ScrollShadow>
       </div>
     </div>
   );
