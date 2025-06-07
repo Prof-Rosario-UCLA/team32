@@ -7,6 +7,7 @@ import { NavBar } from "@/components/nav-bar";
 import { PostCarousel } from "@/components/post-carousel";
 import { useState } from "react";
 import { AuthModals } from "@/components/auth-modals";
+import CookieConsentBanner from "@/components/cookie-consent-banner";
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -69,6 +70,7 @@ export default function Home() {
             </div>
           )}
         </div>
+        <CookieConsentBanner />
       </main>
 
       <AuthModals
