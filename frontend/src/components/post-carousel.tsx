@@ -1,15 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageSquare, Search, X, ChevronDown } from "lucide-react";
-import { useAuth } from "@/contexts/auth-context";
+import { Heart, Search, X, ChevronDown} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { ScrollShadow } from './ui/scroll-shadow';
+import { ScrollArea } from '@radix-ui/react-scroll-area';
 import { toast } from "sonner";
 import { CommentDialog } from '@/components/comment-dialog';
+import { PostDetail } from '@/components/post-detail';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,31 +64,102 @@ export function PostCarousel() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState<SortOption>(SORT_OPTIONS[0]);
-  const { user } = useAuth();
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true); 
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastPostRef = useCallback((node: HTMLDivElement | null) => {
+    if (loading) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage(prevPage => prevPage + 1);
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [loading, hasMore]);
 
-  const fetchPosts = async () => {
+  const handlePostClick = (post: Post) => {
+    setSelectedPost(post);
+  };
+
+  const handlePostClose = () => {
+    setSelectedPost(null);
+  };
+
+  const handlePostLike = async (postId: string) => {
     try {
-      setLoading(true);
-      const queryParams = new URLSearchParams({
-        limit: '10',
-        sortBy: sortOption.sortBy,
-        order: sortOption.order,
-        ...(searchQuery && { search: searchQuery }),
-        ...(selectedTags.length > 0 && { tags: selectedTags.join(',') })
+      const response = await fetch(`http://localhost:3001/api/posts/${postId}/like`, {
+        method: 'POST',
+        credentials: 'include',
       });
 
-      const response = await fetch(
-        `http://localhost:3001/api/posts?${queryParams}`,
-        { credentials: 'include' }
-      );
-      
-      if (!response.ok) throw new Error('Failed to fetch posts');
-      
-      const data: PostsResponse = await response.json();
-      setPosts(data.posts);
+      if (!response.ok) {
+        throw new Error('Failed to like post');
+      }
+
+      setPosts(prev => prev.map(p => 
+        p.id === postId 
+          ? { ...p, liked: !p.liked, likesCount: p.liked ? p.likesCount - 1 : p.likesCount + 1 }
+          : p
+      ));
+
+      if (selectedPost?.id === postId) {
+        setSelectedPost(prev => prev ? {
+          ...prev,
+          liked: !prev.liked,
+          likesCount: prev.liked ? prev.likesCount - 1 : prev.likesCount + 1
+        } : null);
+      }
     } catch (error) {
-      console.error('Error fetching posts:', error);
+      toast.error("Failed to like post");
+      console.log("Failed to like post: " + error);
+    }
+  };
+
+  const handleCommentAdded = (postId: string) => {
+    setPosts(prev => prev.map(p => 
+      p.id === postId 
+        ? { ...p, commentsCount: p.commentsCount + 1 }
+        : p
+    ));
+
+    if (selectedPost?.id === postId) {
+      setSelectedPost(prev => prev ? {
+        ...prev,
+        commentsCount: prev.commentsCount + 1
+      } : null);
+    }
+  };
+
+  const fetchPosts = async (pageNum: number, isNewSearch: boolean = false) => {
+    try {
+      setLoading(true);
+      const queryParams = new URLSearchParams();
+      if (searchQuery) queryParams.append('search', searchQuery);
+      if (selectedTags.length > 0) queryParams.append('tags', selectedTags.join(','));
+      if (sortOption.sortBy) queryParams.append('sortBy', sortOption.sortBy);
+      if (sortOption.order) queryParams.append('order', sortOption.order);
+      queryParams.append('page', pageNum.toString());
+      queryParams.append('limit', '10');
+
+      const response = await fetch(`http://localhost:3001/api/posts?${queryParams}`, {
+        credentials: 'include',
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch posts');
+      const data = await response.json();
+      
+      if (isNewSearch) {
+        setPosts(data.posts);
+      } else {
+        setPosts(prev => [...prev, ...data.posts]);
+      }
+      
+      setHasMore(data.posts.length === 10);
+    } catch (error) {
       toast.error('Failed to fetch posts');
+      console.log("Failed to fetch posts: " +  error);
     } finally {
       setLoading(false);
     }
@@ -95,40 +167,15 @@ export function PostCarousel() {
 
   const fetchTags = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/posts/tags', {
-        credentials: 'include'
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch tags');
-      
-      const tags = await response.json();
-      setAvailableTags(tags);
-    } catch (error) {
-      console.error('Error fetching tags:', error);
-    }
-  };
-
-  const handleLike = async (postId: string) => {
-    if (!user) {
-      toast.error('Please sign in to like posts');
-      return;
-    }
-    
-    try {
-      const response = await fetch(`http://localhost:3001/api/posts/${postId}/like`, {
-        method: 'POST',
+      const response = await fetch('http://localhost:3001/api/tags', {
         credentials: 'include',
       });
-      
-      if (!response.ok) throw new Error('Failed to like post');
-      
-      const updatedPost = await response.json();
-      setPosts(prev => prev.map(post => 
-        post.id === postId ? updatedPost : post
-      ));
+      if (!response.ok) throw new Error('Failed to fetch tags');
+      const data = await response.json();
+      setAvailableTags(data);
     } catch (error) {
-      console.error('Error liking post:', error);
-      toast.error('Failed to like post');
+      toast.error('Failed to fetch tags');
+      console.log("Failed to fetch tags: " + error);
     }
   };
 
@@ -140,15 +187,29 @@ export function PostCarousel() {
     );
   };
 
+  // Reset and fetch new posts when filters change
   useEffect(() => {
-    fetchPosts();
-    fetchTags();
+    setPage(1);
+    setHasMore(true);
+    fetchPosts(1, true);
   }, [searchQuery, selectedTags, sortOption]);
 
+  // Fetch more posts when page changes
+  useEffect(() => {
+    if (page > 1) {
+      fetchPosts(page);
+    }
+  }, [page]);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchTags();
+  }, []);
+
   return (
-    <div className="space-y-6">
+    <div className="h-[calc(100vh-4rem)] flex flex-col">
       {/* Search, Sort, and Filter Section */}
-      <div className="space-y-4">
+      <div className="flex-none space-y-4 p-4">
         <div className="flex gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -195,81 +256,92 @@ export function PostCarousel() {
               </Badge>
             ))}
           </div>
-          <ScrollBar orientation="horizontal" />
+         
         </ScrollArea>
       </div>
 
-      {/* Posts Carousel */}
-      <ScrollArea className="w-full">
-        <div className="flex gap-4 pb-4">
-          {posts.map((post) => (
-            <Card 
-              key={post.id}
-              className="w-[350px] flex-shrink-0 bg-card/50 backdrop-blur"
-            >
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div>
-                  <h3 className="text-lg font-semibold line-clamp-1">{post.title}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(post.createdAt).toLocaleDateString()}
-                  </p>
+      {/* Posts Stack */}
+      <div className="flex-1 flex flex-col min-h-0">
+        <ScrollShadow className="flex-1 px-4 relative">
+            <div className="space-y-4 pb-4">
+              {posts.map((post, index) => (
+                <Card 
+                  key={post.id}
+                  ref={index === posts.length - 1 ? lastPostRef : null}
+                  className="bg-card/50 backdrop-blur cursor-pointer hover:bg-card/60 transition-colors"
+                  onClick={() => handlePostClick(post)}
+                >
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <div>
+                      <h3 className="text-lg font-semibold line-clamp-1">{post.title}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(post.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      {post.tags.map(tag => (
+                        <Badge
+                          key={tag}
+                          variant="secondary"
+                          className="cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleTag(tag);
+                          }}
+                        >
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="mb-4 line-clamp-2">{post.content}</p>
+                    {post.imageUrl && (
+                      <img 
+                        src={post.imageUrl} 
+                        alt={post.title}
+                        className="mb-4 rounded-lg object-cover w-full h-48"
+                      />
+                    )}
+                    <div className="flex items-center gap-4">
+                      <Button
+                        variant={post.liked ? "default" : "ghost"}
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePostLike(post.id);
+                        }}
+                        className="flex items-center gap-1"
+                      >
+                        <Heart className={`h-4 w-4 ${post.liked ? "fill-current" : ""}`} />
+                        <span>{post.likesCount}</span>
+                      </Button>
+                      <CommentDialog
+                        postId={post.id}
+                        commentsCount={post.commentsCount}
+                        onCommentAdded={() => handleCommentAdded(post.id)}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              {loading && (
+                <div className="flex justify-center py-4">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
                 </div>
-                <div className="flex gap-2">
-                  {post.tags.map(tag => (
-                    <Badge
-                      key={tag}
-                      variant="secondary"
-                      className="cursor-pointer"
-                      onClick={() => toggleTag(tag)}
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4 line-clamp-3">{post.content}</p>
-                {post.imageUrl && (
-                  <img 
-                    src={post.imageUrl} 
-                    alt={post.title}
-                    className="mb-4 rounded-lg object-cover w-full h-48"
-                  />
-                )}
-                <div className="flex items-center gap-4">
-                  <Button
-                    variant={post.liked ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => handleLike(post.id)}
-                    className="flex items-center gap-1"
-                  >
-                    <Heart className={`h-4 w-4 ${post.liked ? "fill-current" : ""}`} />
-                    <span>{post.likesCount}</span>
-                  </Button>
-                  <CommentDialog
-                    postId={post.id}
-                    commentsCount={post.commentsCount}
-                    onCommentAdded={() => {
-                      setPosts(prev => prev.map(p => 
-                        p.id === post.id 
-                          ? { ...p, commentsCount: p.commentsCount + 1 }
-                          : p
-                      ));
-                    }}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
-
-      {loading && (
-        <div className="flex justify-center py-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <span className="mt-2 text-primary text-sm">Fetching posts...</span>
-        </div>
+              )}
+            </div>
+         
+        </ScrollShadow>
+      </div>
+      {/* Post Detail Modal */}
+      {selectedPost && (
+        <PostDetail
+          post={selectedPost}
+          onClose={handlePostClose}
+          onLike={handlePostLike}
+          onCommentAdded={() => handleCommentAdded(selectedPost.id)}
+        />
       )}
     </div>
   );
