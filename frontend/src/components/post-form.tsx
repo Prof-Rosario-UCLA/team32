@@ -116,8 +116,30 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+     
+      // Adhere to common voice message file types
+      const mimeTypes = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4',
+        'audio/ogg;codecs=opus',
+        'audio/ogg'
+      ];
+      
+      let selectedMimeType = '';
+      for (const mimeType of mimeTypes) {
+        if (MediaRecorder.isTypeSupported(mimeType)) {
+          selectedMimeType = mimeType;
+          break;
+        }
+      }
+      
+      if (!selectedMimeType) {
+        throw new Error('No supported audio MIME type found');
+      }
+
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
+        mimeType: selectedMimeType
       });
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
@@ -134,11 +156,24 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
         }
 
         const audioBlob = new Blob(audioChunksRef.current, { 
-          type: 'audio/webm;codecs=opus' 
+          type: selectedMimeType 
         });
+        
+        // Create a File object with proper extension based on MIME type
+        const extension = selectedMimeType.includes('webm') ? 'webm' :
+                         selectedMimeType.includes('mp4') ? 'm4a' :
+                         selectedMimeType.includes('ogg') ? 'ogg' : 'webm';
+        
+        const audioFile = new File([audioBlob], `recording-${Date.now()}.${extension}`, {
+          type: selectedMimeType,
+          lastModified: Date.now()
+        });
+
         const audioUrl = URL.createObjectURL(audioBlob);
         setMediaPreview(audioUrl);
-        form.setValue('mediaFile', audioBlob);
+        setMediaType('audio');
+        form.setValue('mediaType', 'audio');
+        form.setValue('mediaFile', audioFile);
       };
 
       mediaRecorder.start(1000);
@@ -263,7 +298,8 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
       // Upload media file if present
       if (values.mediaFile) {
         const uploadFormData = new FormData();
-        uploadFormData.append('file', values.mediaFile);
+        // Ensure we're sending the file with the correct name and type
+        uploadFormData.append('file', values.mediaFile, values.mediaFile.name);
   
         const uploadResponse = await fetch('http://localhost:3001/api/posts/media', {
           method: 'POST',

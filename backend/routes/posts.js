@@ -6,6 +6,7 @@ import path from 'path';
 import prisma from '../prisma/client.js';
 import { verifyToken } from '../middleware/auth.js';
 import { client } from '../redis/client.js';
+import { getSocket } from '../websocket/client.js';
 
 const router = express.Router();
 
@@ -29,14 +30,47 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024, // 10MB limit
   },
   fileFilter: (req, file, cb) => {
+    // Log the file details for debugging
+    console.log('File upload attempt:', {
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size
+    });
+
     // Allow only images and audio files
-    const allowedTypes = /jpeg|jpg|png|gif|webp|mp3|wav|m4a|ogg|aac|webm/;
+    const allowedTypes = /jpeg|jpg|png|gif|webm|mp3|wav|m4a|ogg|aac/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
     
-    if (mimetype && extname) {
+    // More comprehensive MIME type checking
+    const isAudio = file.mimetype.startsWith('audio/') || 
+                   file.mimetype === 'audio/webm' ||
+                   file.mimetype === 'audio/webm;codecs=opus' ||
+                   file.mimetype === 'audio/mpeg' ||
+                   file.mimetype === 'audio/mp4' ||
+                   file.mimetype === 'audio/x-m4a' ||
+                   file.mimetype === 'audio/ogg' ||
+                   file.mimetype === 'audio/ogg;codecs=opus' ||
+                   file.mimetype === 'audio/aac';
+    
+    const isImage = file.mimetype.startsWith('image/');
+    
+    if ((isAudio || isImage) && extname) {
+      // For audio files, ensure we have a proper extension
+      if (isAudio) {
+        const ext = path.extname(file.originalname).toLowerCase();
+        const validAudioExts = ['.webm', '.mp3', '.wav', '.m4a', '.ogg', '.aac'];
+        if (!validAudioExts.includes(ext)) {
+          console.log('Audio file rejected: Invalid extension', { ext });
+          return cb(new Error('Invalid audio file extension'));
+        }
+      }
       return cb(null, true);
     } else {
+      console.log('File rejected:', {
+        reason: !extname ? 'Invalid extension' : 'Invalid MIME type',
+        mimetype: file.mimetype,
+        extname: path.extname(file.originalname)
+      });
       cb(new Error('Only images and audio files are allowed'));
     }
   }
@@ -319,6 +353,12 @@ router.post('/', verifyToken, async (req, res) => {
     // Invalidate relevant caches
     await invalidatePostCaches();
 
+    // Emit new post event
+    const io = getSocket();
+    if (io) {
+      io.emit('new-post', { ...post, liked: false });
+    }
+
     res.status(201).json({ ...post, liked: false });
   } catch (error) {
     console.error('Error creating post:', error);
@@ -357,10 +397,6 @@ router.post('/with-upload', verifyToken, upload.single('file'), async (req, res)
       mediaUrl = await uploadToR2(req.file);
     }
 
-    // Determine if it's image or audio based on file type
-    const isImage = req.file?.mimetype.startsWith('image/');
-    const isAudio = req.file?.mimetype.startsWith('audio/');
-
     const post = await prisma.post.create({
       data: {
         title,
@@ -384,6 +420,12 @@ router.post('/with-upload', verifyToken, upload.single('file'), async (req, res)
 
     // Invalidate relevant caches
     await invalidatePostCaches();
+
+    // Emit new post event
+    const io = getSocket();
+    if (io) {
+      io.emit('new-post', { ...post, liked: false });
+    }
 
     res.status(201).json({ ...post, liked: false });
   } catch (error) {

@@ -18,6 +18,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ImagePreview } from "@/components/image-preview";
+import { NewPostNotification } from '@/components/new-post-notification';
+import { getSocket } from '@/lib/socket';
 
 interface Post {
   id: string;
@@ -207,154 +209,183 @@ export function PostCarousel() {
     fetchTags();
   }, []);
 
-  return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col">
-      {/* Search, Sort, and Filter Section */}
-      <div className="flex-none space-y-4 p-4">
-        <div className="flex gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search posts..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="w-[180px] justify-between">
-                {sortOption.label}
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {SORT_OPTIONS.map((option) => (
-                <DropdownMenuItem
-                  key={`${option.sortBy}-${option.order}`}
-                  onClick={() => setSortOption(option)}
-                >
-                  {option.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        
-        <ScrollArea className="w-full whitespace-nowrap">
-          <div className="flex gap-2 pb-2">
-            {availableTags.map(tag => (
-              <Badge
-                key={tag}
-                variant={selectedTags.includes(tag) ? "default" : "outline"}
-                className="cursor-pointer"
-                onClick={() => toggleTag(tag)}
-              >
-                {tag}
-                {selectedTags.includes(tag) && (
-                  <X className="ml-1 h-3 w-3" />
-                )}
-              </Badge>
-            ))}
-          </div>
-         
-        </ScrollArea>
-      </div>
+  useEffect(() => {
+    const socket = getSocket();
+    
+    // Cleanup on unmount
+    return () => {
+      socket.off('new-post');
+    };
+  }, []);
 
-      {/* Posts Stack */}
-      <div className="flex-1 flex flex-col min-h-0">
-        <ScrollShadow className="flex-1 px-4 relative">
-            <div className="space-y-4 pb-4">
-              {posts.map((post, index) => (
-                <Card 
-                  key={post.id}
-                  ref={index === posts.length - 1 ? lastPostRef : null}
-                  className="bg-card/50 backdrop-blur cursor-pointer hover:bg-card/60 transition-colors"
-                  onClick={() => handlePostClick(post)}
+  const handleRefresh = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/posts', {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to fetch posts');
+      const data = await response.json();
+      setPosts(data.posts || []);
+      setPage(1);
+      setHasMore(true);
+    } catch (error) {
+      console.error('Error refreshing posts:', error);
+      toast.error('Failed to refresh posts');
+    }
+  };
+
+  return (
+    <div className="relative">
+      <div className="h-[calc(100vh-4rem)] flex flex-col">
+        <NewPostNotification onRefresh={handleRefresh} />
+
+        {/* Search, Sort, and Filter Section */}
+        <div className="flex-none space-y-4 p-4">
+          <div className="flex gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search posts..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-[180px] justify-between">
+                  {sortOption.label}
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {SORT_OPTIONS.map((option) => (
+                  <DropdownMenuItem
+                    key={`${option.sortBy}-${option.order}`}
+                    onClick={() => setSortOption(option)}
+                  >
+                    {option.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          
+          <ScrollArea className="w-full whitespace-nowrap">
+            <div className="flex gap-2 pb-2">
+              {availableTags.map(tag => (
+                <Badge
+                  key={tag}
+                  variant={selectedTags.includes(tag) ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => toggleTag(tag)}
                 >
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <div>
-                      <h3 className="text-lg font-semibold line-clamp-1">{post.title}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(post.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      {post.tags.map(tag => (
-                        <Badge
-                          key={tag}
-                          variant="secondary"
-                          className="cursor-pointer"
+                  {tag}
+                  {selectedTags.includes(tag) && (
+                    <X className="ml-1 h-3 w-3" />
+                  )}
+                </Badge>
+              ))}
+            </div>
+           
+          </ScrollArea>
+        </div>
+
+        {/* Posts Stack */}
+        <div className="flex-1 flex flex-col min-h-0">
+          <ScrollShadow className="flex-1 px-4 relative">
+              <div className="space-y-4 pb-4">
+                {posts.map((post, index) => (
+                  <Card 
+                    key={post.id}
+                    ref={index === posts.length - 1 ? lastPostRef : null}
+                    className="bg-card/50 backdrop-blur cursor-pointer hover:bg-card/60 transition-colors"
+                    onClick={() => handlePostClick(post)}
+                  >
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <div>
+                        <h3 className="text-lg font-semibold line-clamp-1">{post.title}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(post.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        {post.tags.map(tag => (
+                          <Badge
+                            key={tag}
+                            variant="secondary"
+                            className="cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleTag(tag);
+                            }}
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="mb-4 line-clamp-2">{post.content}</p>
+                      {post.mediaUrl && (
+                        <div className="mb-4">
+                          {post.mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                            <ImagePreview 
+                              src={post.mediaUrl} 
+                              alt={post.title}
+                              previewClassName="max-h-[40vh]"
+                            />
+                          ) : post.mediaUrl.match(/\.(mp3|wav|m4a|ogg|aac|webm)$/i) ? (
+                            <audio 
+                              src={post.mediaUrl} 
+                              controls 
+                              className="w-full"
+                              preload="metadata"
+                            />
+                          ) : null}
+                        </div>
+                      )}
+                      <div className="flex items-center gap-4">
+                        <Button
+                          variant={post.liked ? "default" : "ghost"}
+                          size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            toggleTag(tag);
+                            handlePostLike(post.id);
                           }}
+                          className="flex items-center gap-1"
                         >
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="mb-4 line-clamp-2">{post.content}</p>
-                    {post.mediaUrl && (
-                      <div className="mb-4">
-                        {post.mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                          <ImagePreview 
-                            src={post.mediaUrl} 
-                            alt={post.title}
-                            previewClassName="max-h-[40vh]"
-                          />
-                        ) : post.mediaUrl.match(/\.(mp3|wav|m4a|ogg|aac|webm)$/i) ? (
-                          <audio 
-                            src={post.mediaUrl} 
-                            controls 
-                            className="w-full"
-                            preload="metadata"
-                          />
-                        ) : null}
+                          <Heart className={`h-4 w-4 ${post.liked ? "fill-current" : ""}`} />
+                          <span>{post.likesCount}</span>
+                        </Button>
+                        <CommentDialog
+                          postId={post.id}
+                          commentsCount={post.commentsCount}
+                          onCommentAdded={() => handleCommentAdded(post.id)}
+                        />
                       </div>
-                    )}
-                    <div className="flex items-center gap-4">
-                      <Button
-                        variant={post.liked ? "default" : "ghost"}
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePostLike(post.id);
-                        }}
-                        className="flex items-center gap-1"
-                      >
-                        <Heart className={`h-4 w-4 ${post.liked ? "fill-current" : ""}`} />
-                        <span>{post.likesCount}</span>
-                      </Button>
-                      <CommentDialog
-                        postId={post.id}
-                        commentsCount={post.commentsCount}
-                        onCommentAdded={() => handleCommentAdded(post.id)}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {loading && (
-                <div className="flex justify-center py-4">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                </div>
-              )}
-            </div>
-         
-        </ScrollShadow>
+                    </CardContent>
+                  </Card>
+                ))}
+                {loading && (
+                  <div className="flex justify-center py-4">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                  </div>
+                )}
+              </div>
+           
+          </ScrollShadow>
+        </div>
+        {/* Post Detail Modal */}
+        {selectedPost && (
+          <PostDetail
+            post={selectedPost}
+            onClose={handlePostClose}
+            onLike={handlePostLike}
+            onCommentAdded={() => handleCommentAdded(selectedPost.id)}
+          />
+        )}
       </div>
-      {/* Post Detail Modal */}
-      {selectedPost && (
-        <PostDetail
-          post={selectedPost}
-          onClose={handlePostClose}
-          onLike={handlePostLike}
-          onCommentAdded={() => handleCommentAdded(selectedPost.id)}
-        />
-      )}
     </div>
   );
 } 

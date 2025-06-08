@@ -2,12 +2,14 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
-import authRoutes from '../routes/auth.js'
-import postRoutes from '../routes/posts.js'
+import authRoutes from '../routes/auth.js';
+import postRoutes from '../routes/posts.js';
 import rateLimit from "express-rate-limit";
 import slowDown from "express-slow-down";
 import helmet from 'helmet';
 import { client, initializeRedis } from '../redis/client.js';
+import { createServer } from 'http';
+import { initializeSocket } from '../websocket/client.js';
 
 dotenv.config();
 
@@ -63,12 +65,18 @@ async function startServer() {
     console.error('Unable to connect to Redis. Continuing without Redis features.');
   }
 
+  // Create HTTP server from Express app
+  const httpServer = createServer(app);
+
+  // Initialize Socket.IO
+  initializeSocket(httpServer);
+
   // Routes
   app.use('/api/users', authRoutes);
   app.use('/api/posts', postRoutes);
 
-  app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+  httpServer.listen(port, () => {
+    console.log(`Server with Socket.IO running on port ${port}`);
   });
 }
 
