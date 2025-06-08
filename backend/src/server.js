@@ -7,6 +7,7 @@ import postRoutes from '../routes/posts.js'
 import rateLimit from "express-rate-limit";
 import slowDown from "express-slow-down";
 import helmet from 'helmet';
+import { client, initializeRedis } from '../redis/client.js';
 
 dotenv.config();
 
@@ -31,8 +32,8 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
-app.use(limiter);
-app.use(speedLimiter);
+// app.use(limiter);
+// app.use(speedLimiter);
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
@@ -55,11 +56,20 @@ app.use(
   })
 );
 
+async function startServer() {
+  const { redisConnected } = await initializeRedis();
 
-// Routes
-app.use('/api/users', authRoutes);
-app.use('/api/posts', postRoutes);
+  if (!redisConnected) {
+    console.error('Unable to connect to Redis. Continuing without Redis features.');
+  }
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-}); 
+  // Routes
+  app.use('/api/users', authRoutes);
+  app.use('/api/posts', postRoutes);
+
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
+}
+
+startServer().catch(console.error);
