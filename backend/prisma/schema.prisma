@@ -33,7 +33,7 @@ model Post {
   title         String
   content       String 
   tags          String[]
-  imageUrl      String?
+  mediaUrl      String?
   isPublished   Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

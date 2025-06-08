@@ -15,15 +15,17 @@ enum Role {
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
-  email     String    @unique
-  password  String
-  role      Role      @default(USER)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  posts     Post[]
-  likes     Like[]
-  comments  Comment[]
+  id               Int       @id @default(autoincrement())
+  email            String    @unique
+  password         String
+  role             Role      @default(USER)
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  posts            Post[]
+  likes            Like[]
+  comments         Comment[]
 }
 
 model Post {
@@ -31,7 +33,7 @@ model Post {
   title       String
   content     String
   tags        String[]
-  imageUrl    String?
+  mediaUrl    String?
   isPublished Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
