@@ -35,16 +35,6 @@ interface Post {
   liked: boolean;
 }
 
-interface PostsResponse {
-  posts: Post[];
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
-}
-
 type SortOption = {
   label: string;
   sortBy: string;

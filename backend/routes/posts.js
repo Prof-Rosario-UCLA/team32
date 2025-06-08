@@ -5,7 +5,9 @@ import crypto from 'crypto';
 import path from 'path';
 import prisma from '../prisma/client.js';
 import { verifyToken } from '../middleware/auth.js';
+import multer from 'multer';
 import { client } from '../redis/client.js';
+
 
 const router = express.Router();
 
@@ -86,6 +88,14 @@ const ANIMALS = [
   'Anonymous Dog', 'Anonymous Horse', 'Anonymous Elephant', 'Anonymous Giraffe',
   'Anonymous Penguin', 'Anonymous Koala', 'Anonymous Kangaroo', 'Anonymous Zebra'
 ];
+
+
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  }
+});
 
 // Function to get consistent anonymous name for a user
 function getAnonymousName(userId) {
@@ -282,17 +292,37 @@ router.get('/', async (req, res) => {
   }
 });
 
+
 // Create a new post (now accepts media URLs from previous uploads)
 router.post('/', verifyToken, async (req, res) => {
   try {
     const { title, content, tags, mediaUrl } = req.body;
     const authorId = req.user.id;
 
+    // Parse tags (it comes as a JSON string from FormData)
+    const parsedTags = JSON.parse(tags || '[]');
+
     // Validate required fields
-    if (!title || !content || !tags || !Array.isArray(tags)) {
+    if (!title || !content || !parsedTags || !Array.isArray(parsedTags)) {
       return res.status(400).json({ 
         message: 'Missing required fields or invalid format' 
       });
+    }
+
+    // Handle file uploads
+    let imageUrl = null;
+    let audioUrl = null;
+
+    if (req.files?.image?.[0]) {
+      // Handle image upload (save to storage/cloud)
+      const imageFile = req.files.image[0];
+      // TODO: Save image and get URL
+    }
+
+    if (req.files?.audio?.[0]) {
+      // Handle audio upload (save to storage/cloud)
+      const audioFile = req.files.audio[0];
+      // TODO: Save audio and get URL
     }
 
     const post = await prisma.post.create({
