@@ -15,7 +15,6 @@ interface ImagePreviewProps {
 export function ImagePreview({ 
   src, 
   alt, 
-  className,
   previewClassName,
   modalClassName 
 }: ImagePreviewProps) {

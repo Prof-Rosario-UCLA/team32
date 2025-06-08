@@ -34,7 +34,7 @@ interface Post {
   commentsCount: number;
   liked: boolean;
 }
-
+/*
 interface PostsResponse {
   posts: Post[];
   pagination: {
@@ -43,7 +43,7 @@ interface PostsResponse {
     limit: number;
     totalPages: number;
   };
-}
+}*/
 
 type SortOption = {
   label: string;
