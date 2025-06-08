@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: "Bruin Hot Take",
   description: "Share your hot takes with fellow Bruins",
   icons: {
-    icon: "/favicon.ico", // or .png or .svg
+    icon: "/favicon.ico", 
   },
 };
 

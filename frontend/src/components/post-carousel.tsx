@@ -17,13 +17,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ImagePreview } from "@/components/image-preview";
 
 interface Post {
   id: string;
   title: string;
   content: string;
   tags: string[];
-  imageUrl?: string;
+  mediaUrl?: string;
   createdAt: string;
   author: {
     id: number;
@@ -296,12 +297,23 @@ export function PostCarousel() {
                   </CardHeader>
                   <CardContent>
                     <p className="mb-4 line-clamp-2">{post.content}</p>
-                    {post.imageUrl && (
-                      <img 
-                        src={post.imageUrl} 
-                        alt={post.title}
-                        className="mb-4 rounded-lg object-cover w-full h-48"
-                      />
+                    {post.mediaUrl && (
+                      <div className="mb-4">
+                        {post.mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                          <ImagePreview 
+                            src={post.mediaUrl} 
+                            alt={post.title}
+                            previewClassName="max-h-[40vh]"
+                          />
+                        ) : post.mediaUrl.match(/\.(mp3|wav|m4a|ogg|aac|webm)$/i) ? (
+                          <audio 
+                            src={post.mediaUrl} 
+                            controls 
+                            className="w-full"
+                            preload="metadata"
+                          />
+                        ) : null}
+                      </div>
                     )}
                     <div className="flex items-center gap-4">
                       <Button

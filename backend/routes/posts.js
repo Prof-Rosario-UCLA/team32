@@ -68,7 +68,7 @@ async function uploadToR2(file) {
   await r2Client.send(uploadCommand);
   
   // Return public URL for your bucket
-  return `https://pub-${process.env.R2_ACCOUNT_ID}.r2.dev/${fileName}`;
+  return `${process.env.R2_PUBLIC_DEV_URL}/${fileName}`;
 }
 
 // Cache expiration times (in seconds)
