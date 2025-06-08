@@ -9,8 +9,8 @@ interface CreatePostModalProps {
 export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogTitle></DialogTitle>
       <DialogContent className="sm:max-w-[800px]">
-        <DialogTitle></DialogTitle>
         <PostForm onSuccess={onClose} />
       </DialogContent>
     </Dialog>
