@@ -3,14 +3,11 @@ import prisma from '../prisma/client.js';
 import { z } from 'zod';
 
 const router = Router();
-
-// Heat calculation constants
 const LIKE_WEIGHT = 2;
 const COMMENT_WEIGHT = 1;
 const RECENCY_DECAY = 0.1; // Heat decays by 10% per hour
 const NEW_POST_BOOST = 1.2; // New posts get a 20% boost
 
-// Input validation schema
 const trendingQuerySchema = z.object({
   limit: z.number().min(1).max(20).default(5),
   timeWindow: z.enum(['hour', 'day', 'week']).default('day'),
@@ -18,7 +15,6 @@ const trendingQuerySchema = z.object({
 
 router.get('/trending', async (req, res) => {
   try {
-    // Validate query parameters
     const { limit, timeWindow } = trendingQuerySchema.parse({
       limit: Number(req.query.limit) || 5,
       timeWindow: req.query.timeWindow || 'day',
@@ -69,16 +65,14 @@ router.get('/trending', async (req, res) => {
 
       // Apply time decay
       const timeDecay = Math.exp(-RECENCY_DECAY * hoursSinceLastEngagement);
-      
       // Apply new post boost (if post is less than 24 hours old)
       const newPostBoost = hoursSinceCreation < 24 ? NEW_POST_BOOST : 1;
-
       // Calculate final heat score (0-100)
       const heatScore = Math.min(
         100,
         Math.round(
           (engagementHeat * timeDecay * newPostBoost) / 
-          (Math.log10(hoursSinceCreation + 2)) // Logarithmic scaling to prevent older posts from dominating
+          (Math.log10(hoursSinceCreation + 2))
         )
       );
 
