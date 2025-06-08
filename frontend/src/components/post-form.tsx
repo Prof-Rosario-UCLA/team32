@@ -394,7 +394,7 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
                 <FormControl>
                   <Textarea
                     placeholder="Share your thoughts..."
-                    className="min-h-[200px]"
+                    className="h-40 resize-none"
                     {...field}
                   />
                 </FormControl>

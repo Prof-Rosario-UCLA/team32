@@ -7,7 +7,6 @@ import { Heart, Search, X, ChevronDown} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollShadow } from './ui/scroll-shadow';
-import { ScrollArea } from '@radix-ui/react-scroll-area';
 import { toast } from "sonner";
 import { CommentDialog } from '@/components/comment-dialog';
 import { PostDetail } from '@/components/post-detail';
@@ -88,6 +87,7 @@ export function PostCarousel() {
 
   const handlePostClose = () => {
     setSelectedPost(null);
+    
   };
 
   const handlePostLike = async (postId: string) => {
@@ -271,7 +271,7 @@ export function PostCarousel() {
             </DropdownMenu>
           </div>
           
-          <ScrollArea className="w-full whitespace-nowrap">
+          <ScrollShadow>
             <div className="flex gap-2 pb-2">
               {availableTags.map(tag => (
                 <Badge
@@ -288,7 +288,7 @@ export function PostCarousel() {
               ))}
             </div>
            
-          </ScrollArea>
+          </ScrollShadow>
         </div>
 
         {/* Posts Stack */}

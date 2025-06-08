@@ -112,7 +112,7 @@ export function CommentDialog({ postId, commentsCount, onCommentAdded }: Comment
             placeholder="Write a comment..."
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            className="min-h-[100px]"
+            className="h-20 resize-none"
           />
           <div className="flex justify-end">
             <Button type="submit" disabled={loading || !user}>

@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollShadow } from "@/components/ui/scroll-shadow"
 import { CommentDialog } from '@/components/comment-dialog';
 import { CommentsSection } from '@/components/comments-section';
+import { CommentsList } from '@/components/comments-list';
 import { ImagePreview } from "@/components/image-preview";
 
 interface Post {
@@ -30,7 +31,7 @@ export function PostDetail({ post, onClose, onLike, onCommentAdded }: PostDetail
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogTitle></DialogTitle>
-      <DialogContent className="max-w-4xl h-[90vh] p-0 flex flex-col">
+      <DialogContent className="max-w-4xl h-[98vh] p-0 flex flex-col">
         <div className="flex-none px-6 py-3 border-b">
           <h2 className="text-xl font-semibold mb-1">{post.title}</h2>
           <div className="flex items-center gap-3 mb-2">
@@ -48,7 +49,7 @@ export function PostDetail({ post, onClose, onLike, onCommentAdded }: PostDetail
         </div>
 
         {/* Content area */}
-        <div className="flex-1 relative min-h-0">
+        <div className="flex-[0.5] relative min-h-0">
           <div className="absolute inset-0 pr-4">
             <ScrollShadow>
               <div className="px-6 py-4">
@@ -59,7 +60,7 @@ export function PostDetail({ post, onClose, onLike, onCommentAdded }: PostDetail
                       <ImagePreview 
                         src={post.mediaUrl} 
                         alt={post.title}
-                        previewClassName="max-h-[50vh]"
+                        previewClassName="max-h-[40vh]"
                         modalClassName="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
                       />
                     ) : post.mediaUrl.match(/\.(mp3|wav|m4a|ogg|aac|webm)$/i) ? (
@@ -78,8 +79,8 @@ export function PostDetail({ post, onClose, onLike, onCommentAdded }: PostDetail
         </div>
 
         {/* Footer */}
-        <div className="flex-none border-t">
-          <div className="px-6 py-2 flex items-center gap-3 border-b">
+        <div className="flex-[0.6] border-t flex flex-col min-h-0">
+          <div className="flex-none px-6 py-2 flex items-center gap-3 border-b">
             <Button
               variant={post.liked ? "default" : "ghost"}
               size="sm"
@@ -95,13 +96,16 @@ export function PostDetail({ post, onClose, onLike, onCommentAdded }: PostDetail
               onCommentAdded={onCommentAdded}
             />
           </div>
-          <div className="h-[30vh] overflow-y-auto">
-            <div className="px-6 py-2">
-              <CommentsSection 
-                postId={post.id} 
-                onCommentAdded={onCommentAdded}
-              />
-            </div>
+          <div className="flex-none px-6 py-2">
+            <CommentsSection 
+              postId={post.id} 
+              onCommentAdded={onCommentAdded}
+            />
+          </div>
+          <div className="flex-1 min-h-0 px-6">
+            <ScrollShadow className="h-full">
+              <CommentsList postId={post.id} />
+            </ScrollShadow>
           </div>
         </div>
       </DialogContent>

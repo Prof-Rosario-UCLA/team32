@@ -2,6 +2,18 @@ import { io, Socket } from 'socket.io-client';
 
 let socket: Socket | null = null;
 
+interface Post {
+  id: string;
+  title: string;
+  content: string;
+  mediaUrl?: string;
+  tags: string[];
+  createdAt: string;
+  likesCount: number;
+  commentsCount: number;
+  liked: boolean;
+}
+
 export const initializeSocket = () => {
   if (!socket) {
     socket = io('http://localhost:3001', {
@@ -40,6 +52,6 @@ export const disconnectSocket = () => {
 
 // Event types for better type safety
 export type SocketEvents = {
-  'new-post': (post: any) => void;
+  'new-post': (post: Post) => void;
   'welcome': (message: string) => void;
 }; 
