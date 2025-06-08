@@ -23,6 +23,7 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "default",
     title: "Bruin Hot Take",
+    icon: "/favicon.ico", 
   },
 };
 
