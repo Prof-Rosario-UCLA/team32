@@ -23,9 +23,9 @@ function getAnonymousName(userId) {
 // Get posts with pagination, filtering, and search
 router.get('/', async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 10, 
+    const {
+      page = 1,
+      limit = 10,
       tags,
       search,
       sortBy = 'createdAt',
@@ -114,8 +114,8 @@ router.post('/', verifyToken, async (req, res) => {
 
     // Validate required fields
     if (!title || !content || !tags || !Array.isArray(tags)) {
-      return res.status(400).json({ 
-        message: 'Missing required fields or invalid format' 
+      return res.status(400).json({
+        message: 'Missing required fields or invalid format'
       });
     }
 
@@ -143,8 +143,8 @@ router.post('/', verifyToken, async (req, res) => {
     res.status(201).json({ ...post, liked: false });
   } catch (error) {
     console.error('Error creating post:', error);
-    res.status(500).json({ 
-      message: error.message || 'Error creating post' 
+    res.status(500).json({
+      message: error.message || 'Error creating post'
     });
   }
 });
@@ -154,7 +154,7 @@ router.post('/:id/like', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
-    
+
     // Check if user already liked the post
     const existingLike = await prisma.like.findUnique({
       where: {
@@ -254,7 +254,7 @@ router.get('/tags', async (req, res) => {
 router.get('/:id/comments', async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const comments = await prisma.comment.findMany({
       where: {
         postId: id

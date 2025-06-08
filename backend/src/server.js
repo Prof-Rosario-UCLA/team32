@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import authRoutes from '../routes/auth.js'
 import postRoutes from '../routes/posts.js'
+import trendingRoutes from './routes/trending.js'
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use(cookieParser());
 // Routes
 app.use('/api/users', authRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api', trendingRoutes);
 
 // Test endpoint
 app.get('/api/health', (req, res) => {
