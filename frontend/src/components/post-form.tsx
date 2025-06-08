@@ -255,33 +255,54 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
       toast.error('Please add at least one tag');
       return;
     }
-
+  
     try {
       setIsSubmitting(true);
-
-      const formData = new FormData();
-      formData.append('title', values.title);
-      formData.append('content', values.content);
-      formData.append('tags', JSON.stringify(tags));
-      
-      if (mediaType === 'image' && values.mediaFile) {
-        formData.append('image', values.mediaFile);
-      } else if (mediaType === 'audio' && values.mediaFile) {
-        formData.append('audio', values.mediaFile);
+      let mediaUrl = null;
+  
+      // Upload media file if present
+      if (values.mediaFile) {
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', values.mediaFile);
+  
+        const uploadResponse = await fetch('http://localhost:3001/api/posts/media', {
+          method: 'POST',
+          body: uploadFormData,
+          credentials: 'include',
+        });
+  
+        if (!uploadResponse.ok) {
+          const uploadError = await uploadResponse.json();
+          throw new Error(uploadError.error || 'Failed to upload file');
+        }
+  
+        const uploadData = await uploadResponse.json();
+        mediaUrl = uploadData.url;
       }
-
+  
+      // Create the post with the uploaded media URL
+      const postData = {
+        title: values.title,
+        content: values.content,
+        tags: tags,
+        ...(mediaUrl && { mediaUrl }), 
+      };
+  
       const response = await fetch('http://localhost:3001/api/posts', {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(postData),
         credentials: 'include',
       });
-
+  
       const data = await response.json();
-
+  
       if (!response.ok) {
         throw new Error(data.message || 'Failed to create post');
       }
-
+  
       toast.success('Post created successfully!');
       if (onSuccess) {
         onSuccess();
@@ -295,6 +316,7 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
       setIsSubmitting(false);
     }
   };
+  
 
   return (
     <Form {...form}>

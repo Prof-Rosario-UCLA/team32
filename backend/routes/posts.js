@@ -1,9 +1,75 @@
 import express from 'express';
+import multer from 'multer';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import crypto from 'crypto';
+import path from 'path';
 import prisma from '../prisma/client.js';
 import { verifyToken } from '../middleware/auth.js';
 import { client } from '../redis/client.js';
 
 const router = express.Router();
+
+// Configure R2 client
+const r2Client = new S3Client({
+  region: 'auto',
+  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+  },
+});
+
+const BUCKET_NAME = process.env.R2_BUCKET_NAME;
+
+// Configure multer for handling file uploads
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Allow only images and audio files
+    const allowedTypes = /jpeg|jpg|png|gif|webp|mp3|wav|m4a|ogg|aac|webm/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only images and audio files are allowed'));
+    }
+  }
+});
+
+// Generate unique filename
+function generateFileName(originalName) {
+  const timestamp = Date.now();
+  const randomString = crypto.randomBytes(6).toString('hex');
+  const extension = path.extname(originalName);
+  return `posts/${timestamp}-${randomString}${extension}`;
+}
+
+// Upload file to R2
+async function uploadToR2(file) {
+  const fileName = generateFileName(file.originalname);
+  
+  const uploadCommand = new PutObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: fileName,
+    Body: file.buffer,
+    ContentType: file.mimetype,
+    Metadata: {
+      originalName: file.originalname,
+      uploadedAt: new Date().toISOString(),
+    }
+  });
+
+  await r2Client.send(uploadCommand);
+  
+  // Return public URL for your bucket
+  return `https://pub-${process.env.R2_ACCOUNT_ID}.r2.dev/${fileName}`;
+}
 
 // Cache expiration times (in seconds)
 const CACHE_TTL = {
@@ -40,6 +106,72 @@ async function invalidatePostCaches() {
   }
   await client.del('tags:all');
 }
+
+// Upload file endpoint (separate from post creation)
+router.post('/media', verifyToken, upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const fileUrl = await uploadToR2(req.file);
+
+    res.json({
+      success: true,
+      url: fileUrl,
+      fileName: req.file.originalname,
+      size: req.file.size,
+      type: req.file.mimetype
+    });
+
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ error: 'Upload failed', details: error.message });
+  }
+});
+
+// Upload voice memo as base64
+router.post('/upload-voice', verifyToken, async (req, res) => {
+  try {
+    const { data, filename, contentType } = req.body;
+    
+    if (!data || !filename) {
+      return res.status(400).json({ error: 'Missing data or filename' });
+    }
+
+    // Remove data URL prefix if present
+    const base64Data = data.replace(/^data:[^;]+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    const fileName = generateFileName(filename);
+
+    const uploadCommand = new PutObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: fileName,
+      Body: buffer,
+      ContentType: contentType || 'audio/webm',
+      Metadata: {
+        originalName: filename,
+        uploadedAt: new Date().toISOString(),
+        source: 'voice-memo'
+      }
+    });
+
+    await r2Client.send(uploadCommand);
+    const fileUrl = `https://pub-${process.env.R2_ACCOUNT_ID}.r2.dev/${fileName}`;
+
+    res.json({
+      success: true,
+      url: fileUrl,
+      fileName: filename,
+      size: buffer.length
+    });
+
+  } catch (error) {
+    console.error('Voice upload error:', error);
+    res.status(500).json({ error: 'Upload failed', details: error.message });
+  }
+});
 
 // Get posts with pagination, filtering, and search
 router.get('/', async (req, res) => {
@@ -150,10 +282,10 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Create a new post
+// Create a new post (now accepts media URLs from previous uploads)
 router.post('/', verifyToken, async (req, res) => {
   try {
-    const { title, content, tags, imageUrl } = req.body;
+    const { title, content, tags, mediaUrl } = req.body;
     const authorId = req.user.id;
 
     // Validate required fields
@@ -168,7 +300,7 @@ router.post('/', verifyToken, async (req, res) => {
         title,
         content,
         tags,
-        imageUrl: imageUrl || null,
+        mediaUrl: mediaUrl || null,
         authorId,
         isPublished: true,
         likesCount: 0,
@@ -190,6 +322,72 @@ router.post('/', verifyToken, async (req, res) => {
     res.status(201).json({ ...post, liked: false });
   } catch (error) {
     console.error('Error creating post:', error);
+    res.status(500).json({ 
+      message: error.message || 'Error creating post' 
+    });
+  }
+});
+
+// Create post with file upload in single request
+router.post('/with-upload', verifyToken, upload.single('file'), async (req, res) => {
+  try {
+    const { title, content, tags } = req.body;
+    const authorId = req.user.id;
+
+    // Validate required fields
+    if (!title || !content || !tags) {
+      return res.status(400).json({ 
+        message: 'Missing required fields' 
+      });
+    }
+
+    // Parse tags if it's a string
+    const parsedTags = typeof tags === 'string' ? JSON.parse(tags) : tags;
+
+    if (!Array.isArray(parsedTags)) {
+      return res.status(400).json({ 
+        message: 'Tags must be an array' 
+      });
+    }
+
+    let mediaUrl = null;
+    
+    // Upload file if provided
+    if (req.file) {
+      mediaUrl = await uploadToR2(req.file);
+    }
+
+    // Determine if it's image or audio based on file type
+    const isImage = req.file?.mimetype.startsWith('image/');
+    const isAudio = req.file?.mimetype.startsWith('audio/');
+
+    const post = await prisma.post.create({
+      data: {
+        title,
+        content,
+        tags: parsedTags,
+        mediaUrl: mediaUrl || null,
+        authorId,
+        isPublished: true,
+        likesCount: 0,
+        commentsCount: 0
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    // Invalidate relevant caches
+    await invalidatePostCaches();
+
+    res.status(201).json({ ...post, liked: false });
+  } catch (error) {
+    console.error('Error creating post with upload:', error);
     res.status(500).json({ 
       message: error.message || 'Error creating post' 
     });
@@ -418,6 +616,16 @@ router.post('/:id/comments', verifyToken, async (req, res) => {
     console.error('Error creating comment:', error);
     res.status(500).json({ message: 'Error creating comment' });
   }
+});
+
+// Error handling middleware
+router.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'File too large' });
+    }
+  }
+  res.status(500).json({ error: error.message });
 });
 
 export default router;
