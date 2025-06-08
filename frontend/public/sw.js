@@ -62,30 +62,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle CSS requests
-  if (event.request.url.endsWith('.css')) {
-    event.respondWith(
-      caches.match(event.request)
-        .then((response) => {
-          return response || fetch(event.request)
-            .then((response) => {
-              if (response.ok) {
-                const responseToCache = response.clone();
-                caches.open(CACHE_NAME)
-                  .then((cache) => {
-                    cache.put(event.request, responseToCache);
-                  });
-              }
-              return response;
-            })
-            .catch(() => {
-              return new Response('/* Offline CSS */', { status: 200, headers: { 'Content-Type': 'text/css' } });
-            });
-        })
-    );
-    return;
-  }
-
   // Handle image requests
   if (event.request.destination === 'image') {
     event.respondWith(
@@ -93,6 +69,7 @@ self.addEventListener('fetch', (event) => {
         .then((response) => {
           return response || fetch(event.request)
             .then((response) => {
+              // Cache successful image responses
               if (response.ok) {
                 const responseToCache = response.clone();
                 caches.open(CACHE_NAME)
@@ -103,6 +80,7 @@ self.addEventListener('fetch', (event) => {
               return response;
             })
             .catch(() => {
+              // Return a placeholder image if fetch fails
               return caches.match('/bruinhottake.png');
             });
         })
@@ -120,6 +98,7 @@ self.addEventListener('fetch', (event) => {
 
         return fetch(event.request)
           .then((response) => {
+            // Cache successful responses
             if (response.ok) {
               const responseToCache = response.clone();
               caches.open(CACHE_NAME)
@@ -130,6 +109,7 @@ self.addEventListener('fetch', (event) => {
             return response;
           })
           .catch(() => {
+            // Return offline page for failed requests
             if (event.request.mode === 'navigate') {
               return caches.match(OFFLINE_URL);
             }
