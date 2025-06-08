@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +28,7 @@ interface PostDetailProps {
 export function PostDetail({ post, onClose, onLike, onCommentAdded }: PostDetailProps) {
   return (
     <Dialog open onOpenChange={onClose}>
+      <DialogTitle></DialogTitle>
       <DialogContent className="max-w-3xl h-[98vh] p-0 flex flex-col">
         {/* Header - Proper spacing */}
         <div className="flex-none px-6 py-4 border-b">
