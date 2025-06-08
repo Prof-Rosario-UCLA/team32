@@ -6,6 +6,7 @@ import path from 'path';
 import prisma from '../prisma/client.js';
 import { verifyToken } from '../middleware/auth.js';
 import { client } from '../redis/client.js';
+import { getSocket } from '../websocket/client.js';
 
 const router = express.Router();
 
@@ -352,6 +353,12 @@ router.post('/', verifyToken, async (req, res) => {
     // Invalidate relevant caches
     await invalidatePostCaches();
 
+    // Emit new post event
+    const io = getSocket();
+    if (io) {
+      io.emit('new-post', { ...post, liked: false });
+    }
+
     res.status(201).json({ ...post, liked: false });
   } catch (error) {
     console.error('Error creating post:', error);
@@ -390,10 +397,6 @@ router.post('/with-upload', verifyToken, upload.single('file'), async (req, res)
       mediaUrl = await uploadToR2(req.file);
     }
 
-    // Determine if it's image or audio based on file type
-    const isImage = req.file?.mimetype.startsWith('image/');
-    const isAudio = req.file?.mimetype.startsWith('audio/');
-
     const post = await prisma.post.create({
       data: {
         title,
@@ -417,6 +420,12 @@ router.post('/with-upload', verifyToken, upload.single('file'), async (req, res)
 
     // Invalidate relevant caches
     await invalidatePostCaches();
+
+    // Emit new post event
+    const io = getSocket();
+    if (io) {
+      io.emit('new-post', { ...post, liked: false });
+    }
 
     res.status(201).json({ ...post, liked: false });
   } catch (error) {

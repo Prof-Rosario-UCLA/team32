@@ -38,17 +38,22 @@ export function NewPostNotification({ onRefresh, className }: NewPostNotificatio
 
   return (
     <div className={cn(
-      "fixed bottom-4 right-4 z-50 animate-in slide-in-from-bottom-4",
+      "fixed bottom-8 left-1/2 -translate-x-1/2 z-50",
       className
     )}>
       <Button
         onClick={handleRefresh}
-        className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+        size="lg"
+        className="rounded-full shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-6 h-auto"
       >
-        <Bell className="h-4 w-4" />
-        {newPostCount === 1 
-          ? "New post available" 
-          : `${newPostCount} new posts available`}
+        <div className="flex items-center gap-2">
+          <Bell className="h-5 w-5" />
+          <span className="font-medium">
+            {newPostCount === 1 
+              ? "New post available" 
+              : `${newPostCount} new posts available`}
+          </span>
+        </div>
       </Button>
     </div>
   );

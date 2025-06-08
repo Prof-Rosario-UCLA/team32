@@ -220,18 +220,25 @@ export function PostCarousel() {
 
   const handleRefresh = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/posts');
+      const response = await fetch('http://localhost:3001/api/posts', {
+        credentials: 'include',
+      });
       if (!response.ok) throw new Error('Failed to fetch posts');
       const data = await response.json();
-      setPosts(data);
+      setPosts(data.posts || []);
+      setPage(1);
+      setHasMore(true);
     } catch (error) {
       console.error('Error refreshing posts:', error);
+      toast.error('Failed to refresh posts');
     }
   };
 
   return (
     <div className="relative">
       <div className="h-[calc(100vh-4rem)] flex flex-col">
+        <NewPostNotification onRefresh={handleRefresh} />
+
         {/* Search, Sort, and Filter Section */}
         <div className="flex-none space-y-4 p-4">
           <div className="flex gap-4">
@@ -379,9 +386,6 @@ export function PostCarousel() {
           />
         )}
       </div>
-
-      {/* Add the notification component */}
-      <NewPostNotification onRefresh={handleRefresh} />
     </div>
   );
 } 
