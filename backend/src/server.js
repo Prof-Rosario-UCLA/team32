@@ -2,12 +2,15 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
-import authRoutes from '../routes/auth.js'
-import postRoutes from '../routes/posts.js'
+import authRoutes from '../routes/auth.js';
+import postRoutes from '../routes/posts.js';
 import rateLimit from "express-rate-limit";
 import slowDown from "express-slow-down";
 import helmet from 'helmet';
 import { client, initializeRedis } from '../redis/client.js';
+
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 
 dotenv.config();
 
@@ -63,12 +66,41 @@ async function startServer() {
     console.error('Unable to connect to Redis. Continuing without Redis features.');
   }
 
+  // Create HTTP server from Express app
+  const httpServer = createServer(app);
+
+  // Attach Socket.IO to HTTP server
+  const io = new Server(httpServer, {
+    cors: {
+      origin: 'http://localhost:3000', 
+      methods: ['GET', 'POST']
+    }
+  });
+
+  // Socket.IO connection handler
+  io.on('connection', (socket) => {
+    console.log('A user connected:', socket.id);
+
+    // emit message to client
+    socket.emit('welcome', 'Welcome to Socket.IO server!');
+
+    // listen for events from client
+    socket.on('new-post', (post) => {
+      // Broadcast new post to all connected clients except sender
+      socket.broadcast.emit('new-post', post);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('User disconnected:', socket.id);
+    });
+  });
+
   // Routes
   app.use('/api/users', authRoutes);
   app.use('/api/posts', postRoutes);
 
-  app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+  httpServer.listen(port, () => {
+    console.log(`Server with Socket.IO running on port ${port}`);
   });
 }
 
