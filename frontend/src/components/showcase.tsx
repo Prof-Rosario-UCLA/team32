@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 
 export function Showcase() {
     const items = Array.from({ length: 10 }, (_, index) => `Item ${index + 1}`);
-    const onItemClick = (item) => {
+    const onItemClick = (item: string) => {
         console.log(`Clicked on ${item}`);
     };
 

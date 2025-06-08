@@ -34,16 +34,6 @@ interface Post {
   liked: boolean;
 }
 
-interface PostsResponse {
-  posts: Post[];
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
-}
-
 type SortOption = {
   label: string;
   sortBy: string;
@@ -167,7 +157,7 @@ export function PostCarousel() {
 
   const fetchTags = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/tags', {
+      const response = await fetch('http://localhost:3001/api/posts/tags', {
         credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to fetch tags');

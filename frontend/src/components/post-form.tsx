@@ -16,7 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { X, Image as ImageIcon, Mic, Square, Upload, Camera } from 'lucide-react';
+import { X, Image as ImageIcon, Mic, Square, Camera } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils"
 import { toast } from "sonner";
