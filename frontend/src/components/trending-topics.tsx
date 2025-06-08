@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { TrendingUp, Flame } from "lucide-react";
 import { motion } from "framer-motion";
+import { getSocket } from "@/lib/socket";
 
 interface TrendingTopic {
     id: string;
@@ -17,24 +18,48 @@ export function TrendingTopics() {
     const [trendingTopics, setTrendingTopics] = useState<TrendingTopic[]>([]);
     const [trendingLoading, setTrendingLoading] = useState(true);
 
+    const fetchTrendingTopics = async () => {
+        try {
+            const response = await fetch('http://localhost:3001/api/trending?limit=3&timeWindow=day');
+            if (!response.ok) throw new Error('Failed to fetch trending topics');
+            const data = await response.json();
+            setTrendingTopics(data);
+        } catch (error) {
+            console.error('Error fetching trending topics:', error);
+        } finally {
+            setTrendingLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchTrendingTopics = async () => {
-            try {
-                const response = await fetch('http://localhost:3001/api/trending?limit=3&timeWindow=day');
-                if (!response.ok) throw new Error('Failed to fetch trending topics');
-                const data = await response.json();
-                setTrendingTopics(data);
-            } catch (error) {
-                console.error('Error fetching trending topics:', error);
-            } finally {
-                setTrendingLoading(false);
-            }
+        fetchTrendingTopics();
+
+        // Set up socket.io listeners for real-time updates
+        const socket = getSocket();
+
+        // Refresh trending topics when:
+        // 1. A new post is created
+        // 2. A post is liked/unliked
+        // 3. A comment is added
+        const handlePostUpdate = () => {
+            fetchTrendingTopics();
         };
 
-        fetchTrendingTopics();
+        socket.on('new-post', handlePostUpdate);
+        socket.on('post-liked', handlePostUpdate);
+        socket.on('post-unliked', handlePostUpdate);
+        socket.on('new-comment', handlePostUpdate);
+
         // Refresh trending topics every 5 minutes
         const interval = setInterval(fetchTrendingTopics, 5 * 60 * 1000);
-        return () => clearInterval(interval);
+
+        return () => {
+            clearInterval(interval);
+            socket.off('new-post', handlePostUpdate);
+            socket.off('post-liked', handlePostUpdate);
+            socket.off('post-unliked', handlePostUpdate);
+            socket.off('new-comment', handlePostUpdate);
+        };
     }, []);
 
     return (
