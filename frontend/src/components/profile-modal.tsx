@@ -128,13 +128,6 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     <span className="font-medium">Email:</span> {user?.email}
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">
-                    <span className="font-medium">Member since:</span>{" "}
-                    {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}
-                  </span>
-                </div>
               </div>
             </div>
           </div>

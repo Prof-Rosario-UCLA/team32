@@ -4,7 +4,10 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface User {
+  id: number;
   email: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface AuthContextType {
