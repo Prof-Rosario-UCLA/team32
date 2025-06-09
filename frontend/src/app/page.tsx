@@ -16,7 +16,7 @@ export default function Home() {
   const [showLogin, setShowLogin] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-orange-950/5">
       <NavBar />
       <main className="container mx-auto flex h-[calc(100vh-4rem)] flex-col px-4">
         <div className="flex flex-1 items-center">
@@ -35,7 +35,7 @@ export default function Home() {
               <div className="flex flex-col justify-center space-y-6">
                 <div className="relative">
                   <motion.div
-                    className="absolute -left-4 -top-4 text-orange-500"
+                    className="absolute -left-4 -top-4"
                     animate={{
                       scale: [1, 1.2, 1],
                       rotate: [-5, 5, -5],
@@ -46,19 +46,39 @@ export default function Home() {
                       ease: "easeInOut",
                     }}
                   >
-                    <Flame className="h-8 w-8" />
+                    <Flame className="h-8 w-8 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
                   </motion.div>
                   <h2 className="mb-4 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
                     Share Your{" "}
-                    <span className="relative bg-gradient-to-r from-orange-500 via-red-500 to-orange-500 bg-clip-text text-transparent">
-                      Hot Takes
+                    <span className="relative inline-block">
+                      <span className="relative z-10 bg-gradient-to-r from-orange-500 via-red-500 to-orange-500 bg-clip-text text-transparent">
+                        Hot Takes
+                      </span>
                       <motion.span
-                        className="absolute -right-6 top-0 text-orange-500"
-                        animate={{ opacity: [0.5, 1, 0.5] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
+                        className="absolute -right-6 top-0 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]"
+                        animate={{
+                          opacity: [0.5, 1, 0.5],
+                          scale: [1, 1.2, 1],
+                        }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
                       >
                         🔥
                       </motion.span>
+                      <motion.div
+                        className="absolute -inset-1 bg-gradient-to-r from-orange-500/20 via-red-500/20 to-orange-500/20 blur-xl"
+                        animate={{
+                          opacity: [0.3, 0.5, 0.3],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      />
                     </span>
                   </h2>
                   <p className="text-lg text-muted-foreground">
@@ -69,7 +89,7 @@ export default function Home() {
                   <Button
                     size="lg"
                     onClick={() => setShowSignup(true)}
-                    className="group relative overflow-hidden bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                    className="group relative overflow-hidden bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all duration-300"
                   >
                     <span className="relative z-10 flex items-center">
                       Join Now <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -92,11 +112,11 @@ export default function Home() {
                 <div className="w-full max-w-md space-y-4">
                   <motion.div
                     whileHover={{ scale: 1.02 }}
-                    className="rounded-lg border bg-card p-6 shadow-sm transition-shadow hover:shadow-md"
+                    className="rounded-lg border bg-card/50 backdrop-blur-sm p-6 shadow-lg shadow-orange-500/5 hover:shadow-orange-500/10 transition-all duration-300"
                   >
                     <div className="mb-2 flex items-center">
-                      <Flame className="mr-2 h-5 w-5 text-orange-500" />
-                      <h3 className="text-lg font-semibold">Real-time Updates</h3>
+                      <Flame className="mr-2 h-5 w-5 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.3)]" />
+                      <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">Real-time Updates</h3>
                     </div>
                     <p className="text-sm text-muted-foreground">
                       Stay connected with the latest campus discussions and trending topics.
@@ -104,11 +124,11 @@ export default function Home() {
                   </motion.div>
                   <motion.div
                     whileHover={{ scale: 1.02 }}
-                    className="rounded-lg border bg-card p-6 shadow-sm transition-shadow hover:shadow-md"
+                    className="rounded-lg border bg-card/50 backdrop-blur-sm p-6 shadow-lg shadow-orange-500/5 hover:shadow-orange-500/10 transition-all duration-300"
                   >
                     <div className="mb-2 flex items-center">
-                      <Zap className="mr-2 h-5 w-5 text-orange-500" />
-                      <h3 className="text-lg font-semibold">Engage & Connect</h3>
+                      <Zap className="mr-2 h-5 w-5 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.3)]" />
+                      <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">Engage & Connect</h3>
                     </div>
                     <p className="text-sm text-muted-foreground">
                       Like, comment, and interact with posts from your fellow Bruins.
