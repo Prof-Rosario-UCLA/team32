@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: us-central1-docker.pkg.dev/cs144-25s-brandonle/bruinhottake/frontend:latest
+        image: gcr.io/cs144-25s-brandonle/frontend:latest
         ports:
         - containerPort: 3000
         env:
