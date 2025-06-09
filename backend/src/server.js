@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import authRoutes from '../routes/auth.js';
 import postRoutes from '../routes/posts.js';
+import trendingRoutes from '../routes/trending.js';
 import rateLimit from "express-rate-limit";
 import slowDown from "express-slow-down";
 import helmet from 'helmet';
@@ -77,6 +78,7 @@ async function startServer() {
   // Routes
   app.use('/api/users', authRoutes);
   app.use('/api/posts', postRoutes);
+  app.use('/api', trendingRoutes);
 
   httpServer.listen(port, () => {
     console.log(`Server with WebSocket running on port ${port}`);

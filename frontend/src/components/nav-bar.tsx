@@ -6,10 +6,11 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { UserAvatar } from "@/components/user-avatar";
 import { useAuth } from "@/contexts/auth-context";
 import { Plus } from "lucide-react";
-// import { Flame } from "lucide-react";
 import { AuthModals } from "@/components/auth-modals";
 import { CreatePostModal } from "@/components/create-post-modal";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { motion } from "framer-motion";
+import { Flame } from "lucide-react";
 
 export function NavBar() {
   const { user, loading } = useAuth();
@@ -19,15 +20,38 @@ export function NavBar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex justify-center items-center">
-        <div className="container flex h-16 items-center justify-between px-4">
+      <header className={`sticky top-0 z-50 w-full border-b ${user ? 'bg-gradient-to-r from-orange-950/5 via-background/95 to-orange-950/5 backdrop-blur supports-[backdrop-filter]:bg-background/60' : 'bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'} flex justify-center items-center relative`}>
+        {user && (
+          <>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(249,115,22,0.1),transparent_70%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_50%,rgba(249,115,22,0.05),transparent_70%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_100%_50%,rgba(249,115,22,0.05),transparent_70%)]" />
+          </>
+        )}
+        <div className="container flex h-16 items-center justify-between px-4 relative">
           {/* Logo */}
           <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
               <AvatarImage src='/bruinhottake.png' />
             </Avatar>
-            <span className="text-xl font-bold">Bruin Hot Take</span>
-            {/*<Flame className="h-6 w-6 text-primary" />*/}
+            <span className={`text-xl font-bold ${user ? 'bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent' : ''}`}>
+              Bruin Hot Take
+            </span>
+            {user && (
+              <motion.div
+                animate={{
+                  scale: [1, 1.2, 1],
+                  rotate: [-5, 5, -5],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              >
+                <Flame className="h-5 w-5 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
+              </motion.div>
+            )}
           </div>
 
           {/* Right side items */}
@@ -37,9 +61,22 @@ export function NavBar() {
               <div className="h-8 w-8 animate-pulse rounded-full bg-muted" />
             ) : user ? (
               <>
-                <Button variant="outline" size="sm" onClick={() => setIsCreatePostOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Post
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsCreatePostOpen(true)}
+                  className="relative overflow-hidden group border-orange-500/20 hover:border-orange-500/40 bg-orange-500/5 hover:bg-orange-500/10"
+                >
+                  <span className="relative z-10 flex items-center">
+                    <Plus className="h-4 w-4 mr-2 text-orange-500" />
+                    Create Post
+                  </span>
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-red-500/10"
+                    initial={{ x: "-100%" }}
+                    whileHover={{ x: "0%" }}
+                    transition={{ duration: 0.3 }}
+                  />
                 </Button>
                 <UserAvatar user={user} />
               </>

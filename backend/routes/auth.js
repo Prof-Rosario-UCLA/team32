@@ -68,7 +68,7 @@ router.post('/register', async (req, res) => {
     if (userExists) {
       return res.status(409).json({ message: "Email already in use" });
     }
-    
+
     const user = await prisma.user.create({
       data: {
         email: email,
@@ -94,7 +94,7 @@ router.post('/register', async (req, res) => {
       maxAge: 60 * 60 * 1000, // 1 hour in milliseconds
     });
 
-    return res.status(200).json({ 
+    return res.status(200).json({
       message: `Registered successfully for ${email}`,
       user: {
         id: createdUser.id,
@@ -149,14 +149,14 @@ router.post('/logout', (req, res) => {
     sameSite: 'lax',
     path: '/',
   });
-  
+
   res.status(200).json({ message: 'Logged out successfully' });
 });
 
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
-    
+
     // Check if user exists
     const user = await prisma.user.findUnique({
       where: { email }
@@ -164,8 +164,8 @@ router.post('/forgot-password', async (req, res) => {
 
     if (!user) {
       // Return success even if user doesn't exist for security
-      return res.status(200).json({ 
-        message: 'If an account exists with this email, you will receive a verification code.' 
+      return res.status(200).json({
+        message: 'If an account exists with this email, you will receive a verification code.'
       });
     }
 
@@ -176,7 +176,7 @@ router.post('/forgot-password', async (req, res) => {
     // Store the verification code in the database
     await prisma.user.update({
       where: { id: user.id },
-      data: { 
+      data: {
         resetToken: verificationCode,
         resetTokenExpiry: codeExpiry
       }
@@ -204,13 +204,13 @@ router.post('/forgot-password', async (req, res) => {
       throw emailError;
     }
 
-    return res.status(200).json({ 
+    return res.status(200).json({
       message: 'If an account exists with this email, you will receive a verification code.',
       email: email // Send back email for verification step
     });
   } catch (error) {
     console.error('Password reset request failed:', error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       message: 'Failed to process password reset request',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
@@ -247,7 +247,7 @@ router.post('/verify-reset-code', async (req, res) => {
       { expiresIn: '15m' }
     );
 
-    return res.status(200).json({ 
+    return res.status(200).json({
       message: 'Code verified successfully',
       resetToken
     });
@@ -263,7 +263,7 @@ router.post('/reset-password', async (req, res) => {
 
     // Verify the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     // Find user
     const user = await prisma.user.findUnique({
       where: { id: decoded.id }

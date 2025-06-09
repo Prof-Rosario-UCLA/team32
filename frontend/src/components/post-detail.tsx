@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Heart } from "lucide-react";
+import { Flame } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollShadow } from "@/components/ui/scroll-shadow"
 import { CommentDialog } from '@/components/comment-dialog';
@@ -75,16 +75,16 @@ export function PostDetail({ post, onClose, onLike, onCommentAdded }: PostDetail
                 {post.mediaUrl && (
                   <div className="mt-4">
                     {post.mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                      <ImagePreview 
-                        src={post.mediaUrl} 
+                      <ImagePreview
+                        src={post.mediaUrl}
                         alt={post.title}
                         previewClassName="max-h-[40vh]"
                         modalClassName="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
                       />
                     ) : post.mediaUrl.match(/\.(mp3|wav|m4a|ogg|aac|webm)$/i) ? (
-                      <audio 
-                        src={post.mediaUrl} 
-                        controls 
+                      <audio
+                        src={post.mediaUrl}
+                        controls
                         className="w-full"
                         preload="metadata"
                       />
@@ -103,9 +103,9 @@ export function PostDetail({ post, onClose, onLike, onCommentAdded }: PostDetail
               variant={post.liked ? "default" : "ghost"}
               size="sm"
               onClick={() => onLike(post.id)}
-              className="flex items-center gap-1 h-8"
+              className={`flex items-center gap-1 h-8 ${post.liked ? 'bg-orange-500 hover:bg-orange-600' : ''}`}
             >
-              <Heart className={`h-4 w-4 ${post.liked ? "fill-current" : ""}`} />
+              <Flame className={`h-4 w-4 ${post.liked ? "fill-current" : ""}`} />
               <span>{post.likesCount}</span>
             </Button>
             <CommentDialog

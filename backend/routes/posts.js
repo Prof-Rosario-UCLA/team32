@@ -7,6 +7,7 @@ import prisma from '../prisma/client.js';
 import { verifyToken } from '../middleware/auth.js';
 import { client } from '../src/redis/client.js';
 import { getWebSocket } from '../websocket/client.js';
+import { invalidateTrendingCaches, LIKE_WEIGHT, COMMENT_WEIGHT, RECENCY_DECAY, NEW_POST_BOOST } from './trending.js';
 
 const router = express.Router();
 
@@ -21,6 +22,7 @@ const r2Client = new S3Client({
 });
 
 const BUCKET_NAME = process.env.R2_BUCKET_NAME;
+console.log(BUCKET_NAME);
 
 // Configure multer for handling file uploads
 const storage = multer.memoryStorage();
@@ -42,16 +44,16 @@ const upload = multer({
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     
     // More comprehensive MIME type checking
-    const isAudio = file.mimetype.startsWith('audio/') || 
-                   file.mimetype === 'audio/webm' ||
-                   file.mimetype === 'audio/webm;codecs=opus' ||
-                   file.mimetype === 'audio/mpeg' ||
-                   file.mimetype === 'audio/mp4' ||
-                   file.mimetype === 'audio/x-m4a' ||
-                   file.mimetype === 'audio/ogg' ||
-                   file.mimetype === 'audio/ogg;codecs=opus' ||
-                   file.mimetype === 'audio/aac';
-    
+    const isAudio = file.mimetype.startsWith('audio/') ||
+      file.mimetype === 'audio/webm' ||
+      file.mimetype === 'audio/webm;codecs=opus' ||
+      file.mimetype === 'audio/mpeg' ||
+      file.mimetype === 'audio/mp4' ||
+      file.mimetype === 'audio/x-m4a' ||
+      file.mimetype === 'audio/ogg' ||
+      file.mimetype === 'audio/ogg;codecs=opus' ||
+      file.mimetype === 'audio/aac';
+
     const isImage = file.mimetype.startsWith('image/');
     
     if ((isAudio || isImage) && extname) {
@@ -208,7 +210,7 @@ router.post('/upload-voice', verifyToken, async (req, res) => {
 });
 
 // Get posts with pagination, filtering, and search
-router.get('/', async (req, res) => {
+router.get('/', verifyToken, async (req, res) => {
   try {
     const { 
       page = 1, 
@@ -257,7 +259,7 @@ router.get('/', async (req, res) => {
     };
 
     // Validate sortBy field
-    const validSortFields = ['createdAt', 'likesCount', 'commentsCount'];
+    const validSortFields = ['createdAt', 'likesCount', 'commentsCount', 'heat'];
     const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
 
     // Get posts with author info and like status for authenticated users
@@ -277,24 +279,79 @@ router.get('/', async (req, res) => {
           select: {
             id: true
           }
-        } : false
+        } : false,
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+          },
+        },
       },
-      orderBy: {
-        [sortField]: order.toLowerCase()
-      },
+      orderBy: sortField === 'heat' ? { createdAt: 'desc' } : { [sortField]: order.toLowerCase() },
       skip,
-      take
+      take: sortField === 'heat' ? 100 : take, // Get more posts for heat calculation
     });
+
+    // Transform posts and calculate heat if needed
+    let transformedPosts = posts.map(post => {
+      // Verify likesCount matches actual likes count
+      const actualLikesCount = post._count.likes;
+      if (post.likesCount !== actualLikesCount) {
+        // If there's a mismatch, update the post's likesCount
+        prisma.post.update({
+          where: { id: post.id },
+          data: { likesCount: actualLikesCount }
+        }).catch(console.error);
+      }
+
+      const transformedPost = {
+        ...post,
+        likesCount: actualLikesCount,
+        liked: post.likes?.length > 0,
+        likes: undefined // Remove the likes array from response
+      };
+
+      // Calculate heat score if sorting by heat
+      if (sortField === 'heat') {
+        const now = new Date();
+        const hoursSinceCreation = (now.getTime() - post.createdAt.getTime()) / (1000 * 60 * 60);
+        const hoursSinceLastEngagement = Math.min(
+          hoursSinceCreation,
+          post.updatedAt ? (now.getTime() - post.updatedAt.getTime()) / (1000 * 60 * 60) : hoursSinceCreation
+        );
+
+        // Base heat from engagement
+        const engagementHeat =
+          (actualLikesCount * LIKE_WEIGHT) +
+          (post._count.comments * COMMENT_WEIGHT);
+
+        // Apply time decay
+        const timeDecay = Math.exp(-RECENCY_DECAY * hoursSinceLastEngagement);
+        // Apply new post boost (if post is less than 24 hours old)
+        const newPostBoost = hoursSinceCreation < 24 ? NEW_POST_BOOST : 1;
+        // Calculate final heat score (0-100)
+        const heatScore = Math.min(
+          100,
+          Math.round(
+            (engagementHeat * timeDecay * newPostBoost) /
+            (Math.log10(hoursSinceCreation + 2))
+          )
+        );
+
+        transformedPost.heat = heatScore;
+      }
+
+      return transformedPost;
+    });
+
+    // Sort by heat if needed
+    if (sortField === 'heat') {
+      transformedPosts.sort((a, b) => (b.heat || 0) - (a.heat || 0));
+      transformedPosts = transformedPosts.slice(0, take);
+    }
 
     // Get total count for pagination
     const total = await prisma.post.count({ where });
-
-    // Transform posts to include liked status
-    const transformedPosts = posts.map(post => ({
-      ...post,
-      liked: post.likes?.length > 0,
-      likes: undefined // Remove the likes array from response
-    }));
 
     const result = {
       posts: transformedPosts,
@@ -324,8 +381,8 @@ router.post('/', verifyToken, async (req, res) => {
 
     // Validate required fields
     if (!title || !content || !tags || !Array.isArray(tags)) {
-      return res.status(400).json({ 
-        message: 'Missing required fields or invalid format' 
+      return res.status(400).json({
+        message: 'Missing required fields or invalid format'
       });
     }
 
@@ -362,8 +419,8 @@ router.post('/', verifyToken, async (req, res) => {
     res.status(201).json({ ...post, liked: false });
   } catch (error) {
     console.error('Error creating post:', error);
-    res.status(500).json({ 
-      message: error.message || 'Error creating post' 
+    res.status(500).json({
+      message: error.message || 'Error creating post'
     });
   }
 });
@@ -376,8 +433,8 @@ router.post('/with-upload', verifyToken, upload.single('file'), async (req, res)
 
     // Validate required fields
     if (!title || !content || !tags) {
-      return res.status(400).json({ 
-        message: 'Missing required fields' 
+      return res.status(400).json({
+        message: 'Missing required fields'
       });
     }
 
@@ -385,13 +442,13 @@ router.post('/with-upload', verifyToken, upload.single('file'), async (req, res)
     const parsedTags = typeof tags === 'string' ? JSON.parse(tags) : tags;
 
     if (!Array.isArray(parsedTags)) {
-      return res.status(400).json({ 
-        message: 'Tags must be an array' 
+      return res.status(400).json({
+        message: 'Tags must be an array'
       });
     }
 
     let mediaUrl = null;
-    
+
     // Upload file if provided
     if (req.file) {
       mediaUrl = await uploadToR2(req.file);
@@ -430,8 +487,8 @@ router.post('/with-upload', verifyToken, upload.single('file'), async (req, res)
     res.status(201).json({ ...post, liked: false });
   } catch (error) {
     console.error('Error creating post with upload:', error);
-    res.status(500).json({ 
-      message: error.message || 'Error creating post' 
+    res.status(500).json({
+      message: error.message || 'Error creating post'
     });
   }
 });
@@ -441,7 +498,7 @@ router.post('/:id/like', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
-    
+
     // Check if user already liked the post
     const existingLike = await prisma.like.findUnique({
       where: {
@@ -453,7 +510,7 @@ router.post('/:id/like', verifyToken, async (req, res) => {
     });
 
     let post;
-    
+
     if (existingLike) {
       // Unlike the post
       await prisma.like.delete({
@@ -465,12 +522,15 @@ router.post('/:id/like', verifyToken, async (req, res) => {
         }
       });
 
+      // Get the actual count of likes after deletion
+      const likeCount = await prisma.like.count({
+        where: { postId: id }
+      });
+
       post = await prisma.post.update({
         where: { id },
         data: {
-          likesCount: {
-            decrement: 1
-          }
+          likesCount: likeCount // Set to actual count
         },
         include: {
           author: {
@@ -492,12 +552,15 @@ router.post('/:id/like', verifyToken, async (req, res) => {
         }
       });
 
+      // Get the actual count of likes after creation
+      const likeCount = await prisma.like.count({
+        where: { postId: id }
+      });
+
       post = await prisma.post.update({
         where: { id },
         data: {
-          likesCount: {
-            increment: 1
-          }
+          likesCount: likeCount // Set to actual count
         },
         include: {
           author: {
@@ -520,6 +583,8 @@ router.post('/:id/like', verifyToken, async (req, res) => {
     if (wss) {
       wss.broadcast('post_updated', post);
     }
+    // Invalidate trending cache since heat scores will change
+    await invalidateTrendingCaches();
 
     res.json(post);
   } catch (error) {
@@ -532,7 +597,7 @@ router.post('/:id/like', verifyToken, async (req, res) => {
 router.get('/tags', async (req, res) => {
   try {
     const cacheKey = 'tags:all';
-    
+
     // Try to get from cache first
     const cachedTags = await client.get(cacheKey);
     if (cachedTags) {
@@ -567,14 +632,14 @@ router.get('/:id/comments', async (req, res) => {
   try {
     const { id } = req.params;
     const cacheKey = `comments:post:${id}`;
-    
+
     // Try to get from cache first
     const cachedComments = await client.get(cacheKey);
     if (cachedComments) {
       console.log("Comments fetched from cache");
       return res.json(JSON.parse(cachedComments));
     }
-    
+
     const comments = await prisma.comment.findMany({
       where: {
         postId: id
@@ -666,6 +731,8 @@ router.post('/:id/comments', verifyToken, async (req, res) => {
     // Invalidate relevant caches
     await invalidatePostCaches(); // Invalidate posts cache because comment count changed
     await client.del(`comments:post:${id}`); // Invalidate specific post's comments cache
+    // Invalidate trending cache since heat scores will change
+    await invalidateTrendingCaches();
 
     // Emit post updated event via WebSocket
     const wss = getWebSocket();
@@ -677,6 +744,80 @@ router.post('/:id/comments', verifyToken, async (req, res) => {
   } catch (error) {
     console.error('Error creating comment:', error);
     res.status(500).json({ message: 'Error creating comment' });
+  }
+});
+
+// Get posts by user ID with pagination
+router.get('/user/:userId', verifyToken, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { page = 1, limit = 5 } = req.query;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    // Get posts with author info and like status for authenticated users
+    const posts = await prisma.post.findMany({
+      where: {
+        authorId: parseInt(userId),
+        isPublished: true
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            email: true
+          }
+        },
+        likes: req.user ? {
+          where: {
+            userId: req.user.id
+          },
+          select: {
+            id: true
+          }
+        } : false,
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      skip,
+      take
+    });
+
+    // Transform posts to include liked status
+    const transformedPosts = posts.map(post => ({
+      ...post,
+      liked: post.likes?.length > 0,
+      likes: undefined // Remove the likes array from response
+    }));
+
+    // Get total count for pagination
+    const total = await prisma.post.count({
+      where: {
+        authorId: parseInt(userId),
+        isPublished: true
+      }
+    });
+
+    res.json({
+      posts: transformedPosts,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching user posts:', error);
+    res.status(500).json({ message: 'Error fetching user posts' });
   }
 });
 
@@ -789,16 +930,6 @@ router.delete('/:id', verifyToken, async (req, res) => {
     console.error('Error deleting post:', error);
     res.status(500).json({ message: 'Error deleting post' });
   }
-});
-
-// Error handling middleware
-router.use((error, req, res, next) => {
-  if (error instanceof multer.MulterError) {
-    if (error.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ error: 'File too large' });
-    }
-  }
-  res.status(500).json({ error: error.message });
 });
 
 export default router;
