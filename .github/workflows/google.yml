@@ -46,7 +46,7 @@ env:
   DEPLOYMENT_NAME: 'bruinhottake'
   REPOSITORY: 'bruinhottake'
   IMAGE: 'app'
-  WORKLOAD_IDENTITY_PROVIDER: 'projects/cs144-25s-brandonle/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+  WORKLOAD_IDENTITY_PROVIDER: 'projects/326959324526/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
 
 jobs:
   setup-build-publish-deploy:
