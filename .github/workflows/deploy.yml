@@ -27,6 +27,12 @@ jobs:
         project_id: ${{ env.PROJECT_ID }}
         service_account_key: ${{ secrets.GCP_SA_KEY }}
         export_default_credentials: true
+        install_components: 'gke-gcloud-auth-plugin'
+
+    - name: Authenticate to Google Cloud
+      run: |
+        gcloud auth activate-service-account --key-file=${{ secrets.GCP_SA_KEY }}
+        gcloud config set project ${{ env.PROJECT_ID }}
 
     - name: Configure Docker
       run: gcloud auth configure-docker
