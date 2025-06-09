@@ -708,6 +708,80 @@ router.post('/:id/comments', verifyToken, async (req, res) => {
   }
 });
 
+// Get posts by user ID with pagination
+router.get('/user/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { page = 1, limit = 5 } = req.query;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    // Get posts with author info and like status for authenticated users
+    const posts = await prisma.post.findMany({
+      where: {
+        authorId: parseInt(userId),
+        isPublished: true
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            email: true
+          }
+        },
+        likes: req.user ? {
+          where: {
+            userId: req.user.id
+          },
+          select: {
+            id: true
+          }
+        } : false,
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      skip,
+      take
+    });
+
+    // Transform posts to include liked status
+    const transformedPosts = posts.map(post => ({
+      ...post,
+      liked: post.likes?.length > 0,
+      likes: undefined // Remove the likes array from response
+    }));
+
+    // Get total count for pagination
+    const total = await prisma.post.count({
+      where: {
+        authorId: parseInt(userId),
+        isPublished: true
+      }
+    });
+
+    res.json({
+      posts: transformedPosts,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching user posts:', error);
+    res.status(500).json({ message: 'Error fetching user posts' });
+  }
+});
+
 // Error handling middleware
 router.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
