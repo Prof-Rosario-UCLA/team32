@@ -6,7 +6,6 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { UserAvatar } from "@/components/user-avatar";
 import { useAuth } from "@/contexts/auth-context";
 import { Plus } from "lucide-react";
-// import { Flame } from "lucide-react";
 import { AuthModals } from "@/components/auth-modals";
 import { CreatePostModal } from "@/components/create-post-modal";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";

@@ -293,11 +293,24 @@ router.get('/', async (req, res) => {
     });
 
     // Calculate heat scores if sorting by heat
-    let transformedPosts = posts.map(post => ({
-      ...post,
-      liked: post.likes?.length > 0,
-      likes: undefined // Remove the likes array from response
-    }));
+    let transformedPosts = posts.map(post => {
+      // Verify likesCount matches actual likes count
+      const actualLikesCount = post._count.likes;
+      if (post.likesCount !== actualLikesCount) {
+        // If there's a mismatch, update the post's likesCount
+        prisma.post.update({
+          where: { id: post.id },
+          data: { likesCount: actualLikesCount }
+        }).catch(console.error);
+      }
+
+      return {
+        ...post,
+        likesCount: actualLikesCount, // Use the actual count from _count.likes
+        liked: post.likes?.length > 0,
+        likes: undefined // Remove the likes array from response
+      };
+    });
 
     if (sortField === 'heat') {
       const now = new Date();
@@ -509,12 +522,15 @@ router.post('/:id/like', verifyToken, async (req, res) => {
         }
       });
 
+      // Get the actual count of likes after deletion
+      const likeCount = await prisma.like.count({
+        where: { postId: id }
+      });
+
       post = await prisma.post.update({
         where: { id },
         data: {
-          likesCount: {
-            decrement: 1
-          }
+          likesCount: likeCount // Set to actual count
         },
         include: {
           author: {
@@ -536,12 +552,15 @@ router.post('/:id/like', verifyToken, async (req, res) => {
         }
       });
 
+      // Get the actual count of likes after creation
+      const likeCount = await prisma.like.count({
+        where: { postId: id }
+      });
+
       post = await prisma.post.update({
         where: { id },
         data: {
-          likesCount: {
-            increment: 1
-          }
+          likesCount: likeCount // Set to actual count
         },
         include: {
           author: {
