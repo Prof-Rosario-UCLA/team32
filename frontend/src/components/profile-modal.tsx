@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { PostCarousel } from "@/components/post-carousel";
 import { Post } from "@/types/post";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { API_URL } from "@/config/api";
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -29,7 +30,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
     try {
       const response = await fetch(
-        `http://localhost:3001/api/posts/user/${user.id}?page=${page}&limit=5`,
+        `${API_URL}/api/posts/user/${user.id}?page=${page}&limit=5`,
         {
           credentials: 'include',
         }

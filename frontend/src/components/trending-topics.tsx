@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { TrendingUp, Flame } from "lucide-react";
 import { motion } from "framer-motion";
 import { getSocket } from "@/lib/socket";
+import { API_URL } from "@/config/api";
 
 interface TrendingTopic {
     id: string;
@@ -20,7 +21,7 @@ export function TrendingTopics() {
 
     const fetchTrendingTopics = async () => {
         try {
-            const response = await fetch('http://localhost:3001/api/trending?limit=3&timeWindow=day');
+            const response = await fetch(`${API_URL}/api/trending?limit=3&timeWindow=day`);
             if (!response.ok) throw new Error('Failed to fetch trending topics');
             const data = await response.json();
             setTrendingTopics(data);

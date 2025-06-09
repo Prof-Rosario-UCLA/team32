@@ -86,6 +86,11 @@ spec:
             secretKeyRef:
               name: r2-storage-secrets
               key: r2-endpoint
+        - name: R2_PUBLIC_DEV_URL
+          valueFrom:
+            secretKeyRef:
+              name: r2-storage-secrets
+              key: r2-public-dev-url
         - name: R2_TOKEN
           valueFrom:
             secretKeyRef:

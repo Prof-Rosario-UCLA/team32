@@ -20,10 +20,13 @@ export function ImagePreview({
 }: ImagePreviewProps) {
   const [isOpen, setIsOpen] = useState(false);
 
+  // Ensure src is a full URL
+  const imageUrl = src.startsWith('http') ? src : `${process.env.NEXT_PUBLIC_API_URL}${src}`;
+
   return (
     <>
       <img 
-        src={src} 
+        src={imageUrl} 
         alt={alt}
         onClick={() => setIsOpen(true)}
         className={cn(
@@ -36,7 +39,7 @@ export function ImagePreview({
         <DialogContent className={cn("max-w-[90vw] max-h-[90vh] p-0 bg-transparent border-none", modalClassName)}>
           <div className="relative w-full h-full flex items-center justify-center">
             <img 
-              src={src} 
+              src={imageUrl} 
               alt={alt}
               className="max-w-full max-h-[90vh] object-contain rounded-lg"
             />

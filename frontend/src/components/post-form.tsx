@@ -38,6 +38,9 @@ const formSchema = z.object({
   mediaFile: z.any().optional(),
 });
 
+// Add tag limit constant
+const MAX_TAGS = 5;
+
 interface PostFormProps {
   onSuccess?: () => void;
   onPostCreated?: (post: Post) => void;
@@ -60,6 +63,10 @@ export function PostForm({ onSuccess, onPostCreated, className }: PostFormProps)
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
+  // Add character count states
+  const [titleCount, setTitleCount] = useState(0);
+  const [contentCount, setContentCount] = useState(0);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -71,14 +78,44 @@ export function PostForm({ onSuccess, onPostCreated, className }: PostFormProps)
     },
   });
 
+  // Add character count handlers
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setTitleCount(value.length);
+    form.setValue('title', value);
+  };
+
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setContentCount(value.length);
+    form.setValue('content', value);
+  };
+
   const addTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && tagInput.trim()) {
       e.preventDefault();
       const newTag = tagInput.trim().toLowerCase();
-      if (!tags.includes(newTag)) {
-        setTags([...tags, newTag]);
-        form.setValue('tags', [...tags, newTag].join(','));
+      
+      // Check if we've reached the tag limit
+      if (tags.length >= MAX_TAGS) {
+        toast.error(`Maximum ${MAX_TAGS} tags allowed`);
+        return;
       }
+
+      // Check if tag already exists
+      if (tags.includes(newTag)) {
+        toast.error('Tag already exists');
+        return;
+      }
+
+      // Check if tag is too long
+      if (newTag.length > 20) {
+        toast.error('Tag must be 20 characters or less');
+        return;
+      }
+
+      setTags([...tags, newTag]);
+      form.setValue('tags', [...tags, newTag].join(','));
       setTagInput('');
     }
   };
@@ -381,10 +418,17 @@ export function PostForm({ onSuccess, onPostCreated, className }: PostFormProps)
               <FormItem>
                 <FormLabel>Title</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="What's your hot take?"
-                    {...field}
-                  />
+                  <div className="space-y-1">
+                    <Input 
+                      placeholder="Enter your title" 
+                      {...field} 
+                      onChange={handleTitleChange}
+                      maxLength={100}
+                    />
+                    <div className="text-sm text-muted-foreground text-right">
+                      {titleCount}/100
+                    </div>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -398,11 +442,18 @@ export function PostForm({ onSuccess, onPostCreated, className }: PostFormProps)
               <FormItem>
                 <FormLabel>Content</FormLabel>
                 <FormControl>
-                  <Textarea
-                    placeholder="Share your thoughts..."
-                    className="h-40 resize-none"
-                    {...field}
-                  />
+                  <div className="space-y-1">
+                    <Textarea
+                      placeholder="What's on your mind?"
+                      className="min-h-[150px] resize-none"
+                      {...field}
+                      onChange={handleContentChange}
+                      maxLength={1000}
+                    />
+                    <div className="text-sm text-muted-foreground text-right">
+                      {contentCount}/1000
+                    </div>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -541,38 +592,51 @@ export function PostForm({ onSuccess, onPostCreated, className }: PostFormProps)
             )}
           </FormItem>
 
-          <FormItem>
-            <FormLabel>Tags</FormLabel>
-            <FormControl>
-              <div className="space-y-2">
-                <Input
-                  placeholder="Add tags (press Enter)"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={addTag}
-                />
-                <div className="flex flex-wrap gap-2">
-                  {tags.map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant="secondary"
-                      className="flex items-center gap-1"
-                    >
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => removeTag(tag)}
-                        className="ml-1 hover:text-destructive"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
+          <FormField
+            control={form.control}
+            name="tags"
+            render={() => (
+              <FormItem>
+                <FormLabel>Tags</FormLabel>
+                <FormControl>
+                  <div className="space-y-2">
+                    <div className="space-y-1">
+                      <Input
+                        placeholder="Add tags (press Enter)"
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onKeyDown={addTag}
+                        maxLength={20}
+                        disabled={tags.length >= MAX_TAGS}
+                      />
+                      <div className="text-sm text-muted-foreground text-right">
+                        {tags.length}/{MAX_TAGS}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {tags.map((tag) => (
+                        <Badge
+                          key={tag}
+                          variant="secondary"
+                          className="flex items-center gap-1"
+                        >
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => removeTag(tag)}
+                            className="ml-1 hover:text-destructive"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <div className="flex flex-col gap-3">
             <Button type="submit" className="w-full" disabled={isSubmitting}>

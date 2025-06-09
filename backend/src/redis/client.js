@@ -14,7 +14,21 @@ const redisConfig = {
         return new Error('Redis max retries reached');
       }
       return Math.min(retries * 100, 3000);
+    },
+    keepAlive: 10000, // Keep alive every 10 seconds
+    noDelay: true
+  },
+  retry_strategy: function(options) {
+    if (options.error && options.error.code === 'ECONNREFUSED') {
+      return new Error('The server refused the connection');
     }
+    if (options.total_retry_time > 1000 * 60 * 60) {
+      return new Error('Retry time exhausted');
+    }
+    if (options.attempt > 10) {
+      return undefined;
+    }
+    return Math.min(options.attempt * 100, 3000);
   }
 };
 
@@ -44,14 +58,31 @@ export async function initializeRedis() {
   } catch (error) {
     console.error('Redis Client Error:', error);
     isConnected = false;
-    return { redisConnected: false };
+    // Try to reconnect
+    try {
+      await client.connect();
+      isConnected = true;
+      console.log('Redis Client Reconnected Successfully');
+      return { redisConnected: true };
+    } catch (reconnectError) {
+      console.error('Redis Client Reconnection Failed:', reconnectError);
+      return { redisConnected: false };
+    }
   }
 }
 
 // Redis client events
-client.on('error', (err) => {
+client.on('error', async (err) => {
   console.error('Redis Client Error:', err);
   isConnected = false;
+  // Try to reconnect on error
+  try {
+    await client.connect();
+    isConnected = true;
+    console.log('Redis Client Reconnected After Error');
+  } catch (reconnectError) {
+    console.error('Redis Client Reconnection Failed After Error:', reconnectError);
+  }
 });
 
 client.on('connect', () => {
@@ -69,9 +100,17 @@ client.on('ready', () => {
   isConnected = true;
 });
 
-client.on('end', () => {
+client.on('end', async () => {
   console.log('Redis Client Connection Ended');
   isConnected = false;
+  // Try to reconnect when connection ends
+  try {
+    await client.connect();
+    isConnected = true;
+    console.log('Redis Client Reconnected After End');
+  } catch (reconnectError) {
+    console.error('Redis Client Reconnection Failed After End:', reconnectError);
+  }
 });
 
 // connection status
