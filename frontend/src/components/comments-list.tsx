@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from "sonner";
+import { API_URL } from '@/config/api';
 
 interface Comment {
   id: string;
@@ -13,15 +14,16 @@ interface Comment {
 
 interface CommentsListProps {
   postId: string;
+  newComment?: Comment;
 }
 
-export function CommentsList({ postId }: CommentsListProps) {
+export function CommentsList({ postId, newComment }: CommentsListProps) {
   const [comments, setComments] = useState<Comment[]>([]);
 
   useEffect(() => {
     const fetchComments = async () => {
       try {
-        const response = await fetch(`http://localhost:3001/api/posts/${postId}/comments`, {
+        const response = await fetch(`${API_URL}/api/posts/${postId}/comments`, {
           credentials: 'include',
         });
         if (!response.ok) throw new Error('Failed to fetch comments');
@@ -34,6 +36,13 @@ export function CommentsList({ postId }: CommentsListProps) {
 
     fetchComments();
   }, [postId]);
+
+  // Add new comment to the list when it's provided
+  useEffect(() => {
+    if (newComment && !comments.some(comment => comment.id === newComment.id)) {
+      setComments(prevComments => [newComment, ...prevComments]);
+    }
+  }, [newComment, comments]);
 
   return (
     <div className="space-y-4">

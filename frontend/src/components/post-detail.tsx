@@ -7,6 +7,17 @@ import { CommentDialog } from '@/components/comment-dialog';
 import { CommentsSection } from '@/components/comments-section';
 import { CommentsList } from '@/components/comments-list';
 import { ImagePreview } from "@/components/image-preview";
+import { useState } from 'react';
+
+interface Comment {
+  id: string;
+  content: string;
+  createdAt: string;
+  author: {
+    id: number;
+    anonymousName: string;
+  };
+}
 
 interface Post {
   id: string;
@@ -28,6 +39,13 @@ interface PostDetailProps {
 }
 
 export function PostDetail({ post, onClose, onLike, onCommentAdded }: PostDetailProps) {
+  const [newComment, setNewComment] = useState<Comment | undefined>();
+
+  const handleCommentAdded = (comment: Comment) => {
+    setNewComment(comment);
+    onCommentAdded();
+  };
+
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogTitle></DialogTitle>
@@ -99,12 +117,15 @@ export function PostDetail({ post, onClose, onLike, onCommentAdded }: PostDetail
           <div className="flex-none px-6 py-2">
             <CommentsSection 
               postId={post.id} 
-              onCommentAdded={onCommentAdded}
+              onCommentAdded={handleCommentAdded}
             />
           </div>
           <div className="flex-1 min-h-0 px-6">
             <ScrollShadow className="h-full">
-              <CommentsList postId={post.id} />
+              <CommentsList 
+                postId={post.id} 
+                newComment={newComment}
+              />
             </ScrollShadow>
           </div>
         </div>

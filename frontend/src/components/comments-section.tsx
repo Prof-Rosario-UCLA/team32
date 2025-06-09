@@ -3,10 +3,21 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth-context";
+import { API_URL } from '@/config/api';
+
+interface Comment {
+  id: string;
+  content: string;
+  createdAt: string;
+  author: {
+    id: number;
+    anonymousName: string;
+  };
+}
 
 interface CommentsSectionProps {
   postId: string;
-  onCommentAdded: () => void;
+  onCommentAdded: (comment: Comment) => void;
 }
 
 export function CommentsSection({ postId, onCommentAdded }: CommentsSectionProps) {
@@ -24,7 +35,7 @@ export function CommentsSection({ postId, onCommentAdded }: CommentsSectionProps
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/posts/${postId}/comments`, {
+      const response = await fetch(`${API_URL}/api/posts/${postId}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -35,8 +46,9 @@ export function CommentsSection({ postId, onCommentAdded }: CommentsSectionProps
 
       if (!response.ok) throw new Error('Failed to add comment');
       
+      const comment = await response.json();
       setNewComment('');
-      onCommentAdded();
+      onCommentAdded(comment);
     } catch (error) {
       toast.error('Failed to add comment: ' + error);
     } finally {

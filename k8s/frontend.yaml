@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: ucla-forum
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: gcr.io/cs144-25s-brandonle/frontend:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NEXT_PUBLIC_API_URL
+          value: "https://bruinhottake.brandonle.dev/api"
+        - name: NEXT_PUBLIC_WS_URL
+          value: "wss://bruinhottake.brandonle.dev/ws"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "300m"
+        startupProbe:
+          httpGet:
+            path: /
+            port: 3000
+          failureThreshold: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 60
+          periodSeconds: 20
+          timeoutSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: ucla-forum
+spec:
+  selector:
+    app: frontend
+  ports:
+  - port: 80
+    targetPort: 3000
+  type: ClusterIP 

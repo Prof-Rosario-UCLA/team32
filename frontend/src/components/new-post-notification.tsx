@@ -3,38 +3,53 @@ import { Button } from '@/components/ui/button';
 import { Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getSocket } from '@/lib/socket';
+import type { Post } from '../types/post';
+
+interface WebSocketMessage {
+  type: string;
+  data: Post;
+  timestamp: number;
+}
 
 interface NewPostNotificationProps {
   onRefresh: () => void;
   className?: string;
+  currentPosts: Post[];
 }
 
-export function NewPostNotification({ onRefresh, className }: NewPostNotificationProps) {
+export function NewPostNotification({ onRefresh, className, currentPosts }: NewPostNotificationProps) {
   const [showNotification, setShowNotification] = useState(false);
-  const [newPostCount, setNewPostCount] = useState(0);
+  const [unseenPosts, setUnseenPosts] = useState<Post[]>([]);
 
   useEffect(() => {
     const socket = getSocket();
     
-    const handleNewPost = () => {
-      setNewPostCount(prev => prev + 1);
-      setShowNotification(true);
+    const handleNewPost = (message: WebSocketMessage) => {
+      if (!message?.data || !message.data.id || !Array.isArray(message.data.tags)) {
+        console.error('Invalid post data received:', message);
+        return;
+      }
+      // Only add to unseen posts if it's not already displayed
+      if (!currentPosts.some(existingPost => existingPost.id === message.data.id)) {
+        setUnseenPosts(prev => [...prev, message.data]);
+        setShowNotification(true);
+      }
     };
 
-    socket.on('new-post', handleNewPost);
+    socket.on('new_post', handleNewPost);
 
     return () => {
-      socket.off('new-post', handleNewPost);
+      socket.off('new_post', handleNewPost);
     };
-  }, []);
+  }, [currentPosts]);
 
   const handleRefresh = () => {
     onRefresh();
     setShowNotification(false);
-    setNewPostCount(0);
+    setUnseenPosts([]);
   };
 
-  if (!showNotification) return null;
+  if (!showNotification || unseenPosts.length === 0) return null;
 
   return (
     <div className={cn(
@@ -49,12 +64,12 @@ export function NewPostNotification({ onRefresh, className }: NewPostNotificatio
         <div className="flex items-center gap-2">
           <Bell className="h-5 w-5" />
           <span className="font-medium">
-            {newPostCount === 1 
+            {unseenPosts.length === 1 
               ? "New post available" 
-              : `${newPostCount} new posts available`}
+              : `${unseenPosts.length} new posts available`}
           </span>
         </div>
       </Button>
     </div>
   );
-} 
+}

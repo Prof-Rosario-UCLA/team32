@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState } from "react";
+import { API_URL } from '@/config/api';
 
 const emailSchema = z.object({ email: z.string().email("Invalid email") });
 const codeSchema = z.object({ code: z.string().length(6, "Code must be 6 digits") });
@@ -30,7 +31,7 @@ export function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProp
   const handleEmailSubmit = async (values: { email: string }) => {
     setError(null);
     try {
-      const res = await fetch("http://localhost:3001/api/users/forgot-password", {
+      const res = await fetch(`${API_URL}/api/users/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: values.email })
@@ -51,7 +52,7 @@ export function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProp
   const handleCodeSubmit = async (values: { code: string }) => {
     setError(null);
     try {
-      const res = await fetch("http://localhost:3001/api/users/verify-reset-code", {
+      const res = await fetch(`${API_URL}/api/users/verify-reset-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, code: values.code })
@@ -72,7 +73,7 @@ export function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProp
   const handlePasswordSubmit = async (values: { password: string }) => {
     setError(null);
     try {
-      const res = await fetch("http://localhost:3001/api/users/reset-password", {
+      const res = await fetch(`${API_URL}/api/users/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: resetToken, newPassword: values.password })

@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useEffect, useState } from "react";
+import { API_URL } from '@/config/api';
 
 const resetPasswordSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters")
@@ -27,7 +28,7 @@ export function ResetPasswordModal({ isOpen, onClose, token }: ResetPasswordModa
   const onSubmit = async (values: { password: string }) => {
     setError(null);
     try {
-      const res = await fetch("http://localhost:3001/api/users/reset-password", {
+      const res = await fetch(`${API_URL}/api/users/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, newPassword: values.password })

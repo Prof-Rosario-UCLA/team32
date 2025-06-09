@@ -90,7 +90,7 @@ router.post('/register', async (req, res) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: true,
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 60 * 60 * 1000, // 1 hour in milliseconds
     });
 
@@ -131,7 +131,7 @@ router.post('/login', async (req, res) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: true,
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 60 * 60 * 1000, 
     });
 
@@ -146,7 +146,7 @@ router.post('/logout', (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
     secure: true,
-    sameSite: 'strict',
+    sameSite: 'lax',
     path: '/',
   });
   

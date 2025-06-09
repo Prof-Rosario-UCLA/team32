@@ -6,12 +6,12 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { MessageSquare, Send } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { API_URL } from '@/config/api';
 
 interface Comment {
   id: string;
@@ -38,7 +38,7 @@ export function CommentDialog({ postId, commentsCount, onCommentAdded }: Comment
 
   const fetchComments = async () => {
     try {
-      const response = await fetch(`http://localhost:3001/api/posts/${postId}/comments`, {
+      const response = await fetch(`${API_URL}/api/posts/${postId}/comments`, {
         credentials: 'include',
       });
       
@@ -65,7 +65,7 @@ export function CommentDialog({ postId, commentsCount, onCommentAdded }: Comment
 
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:3001/api/posts/${postId}/comments`, {
+      const response = await fetch(`${API_URL}/api/posts/${postId}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -89,60 +89,73 @@ export function CommentDialog({ postId, commentsCount, onCommentAdded }: Comment
     }
   };
 
+  const handleTriggerClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpen(true);
+    fetchComments();
+  };
+
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (isOpen) {
+      fetchComments();
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      setOpen(isOpen);
-      if (isOpen) {
-        fetchComments();
-      }
-    }}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="flex items-center gap-1">
+    <div onClick={(e) => e.stopPropagation()}>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="flex items-center gap-1"
+          onClick={handleTriggerClick}
+        >
           <MessageSquare className="h-4 w-4" />
           <span>{commentsCount}</span>
         </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Comments</DialogTitle>
-        </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Textarea
-            placeholder="Write a comment..."
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            className="h-20 resize-none"
-          />
-          <div className="flex justify-end">
-            <Button type="submit" disabled={loading || !user}>
-              {loading ? 'Posting...' : 'Post Comment'}
-              <Send className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-        </form>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Comments</DialogTitle>
+          </DialogHeader>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Textarea
+              placeholder="Write a comment..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              className="h-20 resize-none"
+            />
+            <div className="flex justify-end">
+              <Button type="submit" disabled={loading || !user}>
+                {loading ? 'Posting...' : 'Post Comment'}
+                <Send className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          </form>
 
-        <ScrollArea className="h-[300px] pr-4">
-          <div className="space-y-4">
-            {comments.map((comment) => (
-              <div key={comment.id} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{comment.author.anonymousName}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(comment.createdAt).toLocaleDateString()}
-                  </span>
+          <ScrollArea className="h-[300px] pr-4">
+            <div className="space-y-4">
+              {comments.map((comment) => (
+                <div key={comment.id} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{comment.author.anonymousName}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(comment.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{comment.content}</p>
                 </div>
-                <p className="text-sm text-muted-foreground">{comment.content}</p>
-              </div>
-            ))}
-            {comments.length === 0 && (
-              <p className="text-center text-sm text-muted-foreground">
-                No comments yet. Be the first to comment!
-              </p>
-            )}
-          </div>
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
+              ))}
+              {comments.length === 0 && (
+                <p className="text-center text-sm text-muted-foreground">
+                  No comments yet. Be the first to comment!
+                </p>
+              )}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 } 

@@ -26,6 +26,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { API_URL } from '@/config/api';
+import { Post } from '@/types/post';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title is too long'),
@@ -38,10 +40,11 @@ const formSchema = z.object({
 
 interface PostFormProps {
   onSuccess?: () => void;
+  onPostCreated?: (post: Post) => void;
   className?: string;
 }
 
-export function PostForm({ onSuccess, className }: PostFormProps) {
+export function PostForm({ onSuccess, onPostCreated, className }: PostFormProps) {
   const router = useRouter();
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
@@ -301,7 +304,7 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
         // Ensure we're sending the file with the correct name and type
         uploadFormData.append('file', values.mediaFile, values.mediaFile.name);
   
-        const uploadResponse = await fetch('http://localhost:3001/api/posts/media', {
+        const uploadResponse = await fetch(`${API_URL}/api/posts/media`, {
           method: 'POST',
           body: uploadFormData,
           credentials: 'include',
@@ -324,7 +327,7 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
         ...(mediaUrl && { mediaUrl }), 
       };
   
-      const response = await fetch('http://localhost:3001/api/posts', {
+      const response = await fetch(`${API_URL}/api/posts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -340,6 +343,9 @@ export function PostForm({ onSuccess, className }: PostFormProps) {
       }
   
       toast.success('Post created successfully!');
+      if (onPostCreated) {
+        onPostCreated(data);
+      }
       if (onSuccess) {
         onSuccess();
       } else {

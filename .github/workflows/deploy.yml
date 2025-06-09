@@ -1,0 +1,71 @@
+name: Deploy to GKE
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  PROJECT_ID: cs144-25s-brandonle
+  GKE_CLUSTER: bruinhottake-cluster
+  GKE_ZONE: us-central1-a
+  DEPLOYMENT_NAME: bruinhottake
+
+jobs:
+  setup-build-deploy:
+    name: Setup, Build, and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        export_default_credentials: true
+
+    - name: Configure Docker
+      run: gcloud auth configure-docker
+
+    - name: Get GKE Credentials
+      run: |
+        gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} \
+          --zone ${{ env.GKE_ZONE }} \
+          --project ${{ env.PROJECT_ID }}
+
+    - name: Build and Push Backend
+      run: |
+        cd backend
+        docker build -t gcr.io/${{ env.PROJECT_ID }}/backend:${{ github.sha }} .
+        docker push gcr.io/${{ env.PROJECT_ID }}/backend:${{ github.sha }}
+        docker tag gcr.io/${{ env.PROJECT_ID }}/backend:${{ github.sha }} gcr.io/${{ env.PROJECT_ID }}/backend:latest
+        docker push gcr.io/${{ env.PROJECT_ID }}/backend:latest
+
+    - name: Build and Push Frontend
+      run: |
+        cd frontend
+        docker build -t gcr.io/${{ env.PROJECT_ID }}/frontend:${{ github.sha }} .
+        docker push gcr.io/${{ env.PROJECT_ID }}/frontend:${{ github.sha }}
+        docker tag gcr.io/${{ env.PROJECT_ID }}/frontend:${{ github.sha }} gcr.io/${{ env.PROJECT_ID }}/frontend:latest
+        docker push gcr.io/${{ env.PROJECT_ID }}/frontend:latest
+
+    - name: Update Backend Deployment
+      run: |
+        kubectl set image deployment/backend \
+          backend=gcr.io/${{ env.PROJECT_ID }}/backend:${{ github.sha }} \
+          -n ucla-forum
+
+    - name: Update Frontend Deployment
+      run: |
+        kubectl set image deployment/frontend \
+          frontend=gcr.io/${{ env.PROJECT_ID }}/frontend:${{ github.sha }} \
+          -n ucla-forum
+
+    - name: Verify Deployment
+      run: |
+        kubectl rollout status deployment/backend -n ucla-forum
+        kubectl rollout status deployment/frontend -n ucla-forum 

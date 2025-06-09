@@ -1,0 +1,8 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: ucla-forum-cert
+  namespace: ucla-forum
+spec:
+  domains:
+    - bruinhottake.brandonle.dev 

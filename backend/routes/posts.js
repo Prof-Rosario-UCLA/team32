@@ -5,8 +5,8 @@ import crypto from 'crypto';
 import path from 'path';
 import prisma from '../prisma/client.js';
 import { verifyToken } from '../middleware/auth.js';
-import { client } from '../redis/client.js';
-import { getSocket } from '../websocket/client.js';
+import { client } from '../src/redis/client.js';
+import { getWebSocket } from '../websocket/client.js';
 
 const router = express.Router();
 
@@ -353,10 +353,10 @@ router.post('/', verifyToken, async (req, res) => {
     // Invalidate relevant caches
     await invalidatePostCaches();
 
-    // Emit new post event
-    const io = getSocket();
-    if (io) {
-      io.emit('new-post', { ...post, liked: false });
+    // Emit new post event via WebSocket
+    const wss = getWebSocket();
+    if (wss) {
+      wss.broadcast('new_post', { ...post, liked: false });
     }
 
     res.status(201).json({ ...post, liked: false });
@@ -421,10 +421,10 @@ router.post('/with-upload', verifyToken, upload.single('file'), async (req, res)
     // Invalidate relevant caches
     await invalidatePostCaches();
 
-    // Emit new post event
-    const io = getSocket();
-    if (io) {
-      io.emit('new-post', { ...post, liked: false });
+    // Emit new post event via WebSocket
+    const wss = getWebSocket();
+    if (wss) {
+      wss.broadcast('new_post', { ...post, liked: false });
     }
 
     res.status(201).json({ ...post, liked: false });
@@ -514,6 +514,12 @@ router.post('/:id/like', verifyToken, async (req, res) => {
 
     // Invalidate post caches since like count changed
     await invalidatePostCaches();
+
+    // Emit post updated event via WebSocket
+    const wss = getWebSocket();
+    if (wss) {
+      wss.broadcast('post_updated', post);
+    }
 
     res.json(post);
   } catch (error) {
@@ -631,11 +637,19 @@ router.post('/:id/comments', verifyToken, async (req, res) => {
     });
 
     // Update post's comment count
-    await prisma.post.update({
+    const updatedPost = await prisma.post.update({
       where: { id },
       data: {
         commentsCount: {
           increment: 1
+        }
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            email: true
+          }
         }
       }
     });
@@ -653,10 +667,127 @@ router.post('/:id/comments', verifyToken, async (req, res) => {
     await invalidatePostCaches(); // Invalidate posts cache because comment count changed
     await client.del(`comments:post:${id}`); // Invalidate specific post's comments cache
 
+    // Emit post updated event via WebSocket
+    const wss = getWebSocket();
+    if (wss) {
+      wss.broadcast('post_updated', { ...updatedPost, liked: false });
+    }
+
     res.status(201).json(transformedComment);
   } catch (error) {
     console.error('Error creating comment:', error);
     res.status(500).json({ message: 'Error creating comment' });
+  }
+});
+
+// Update a post
+router.put('/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, content, tags, mediaUrl } = req.body;
+    const userId = req.user.id;
+
+    // Check if post exists and user is the author
+    const existingPost = await prisma.post.findUnique({
+      where: { id },
+      include: {
+        author: {
+          select: {
+            id: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    if (!existingPost) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    if (existingPost.authorId !== userId) {
+      return res.status(403).json({ message: 'Not authorized to update this post' });
+    }
+
+    // Update the post
+    const updatedPost = await prisma.post.update({
+      where: { id },
+      data: {
+        title,
+        content,
+        tags,
+        mediaUrl: mediaUrl || null
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    // Invalidate relevant caches
+    await invalidatePostCaches();
+
+    // Emit post updated event via WebSocket
+    const wss = getWebSocket();
+    if (wss) {
+      wss.broadcast('post_updated', { ...updatedPost, liked: false });
+    }
+
+    res.json({ ...updatedPost, liked: false });
+  } catch (error) {
+    console.error('Error updating post:', error);
+    res.status(500).json({ message: 'Error updating post' });
+  }
+});
+
+// Delete a post
+router.delete('/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Check if post exists and user is the author
+    const existingPost = await prisma.post.findUnique({
+      where: { id },
+      include: {
+        author: {
+          select: {
+            id: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    if (!existingPost) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    if (existingPost.authorId !== userId) {
+      return res.status(403).json({ message: 'Not authorized to delete this post' });
+    }
+
+    // Delete the post
+    await prisma.post.delete({
+      where: { id }
+    });
+
+    // Invalidate relevant caches
+    await invalidatePostCaches();
+
+    // Emit post deleted event via WebSocket
+    const wss = getWebSocket();
+    if (wss) {
+      wss.broadcast('post_deleted', { ...existingPost, liked: false });
+    }
+
+    res.json({ message: 'Post deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting post:', error);
+    res.status(500).json({ message: 'Error deleting post' });
   }
 });
 

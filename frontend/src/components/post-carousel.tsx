@@ -18,33 +18,32 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ImagePreview } from "@/components/image-preview";
 import { NewPostNotification } from '@/components/new-post-notification';
-import { getSocket } from '@/lib/socket';
+import { initializeWebSocket, on, getSocket } from '@/lib/socket';
+import { API_URL } from '@/config/api';
+import type { Post } from '../types/post';
+import { CreatePostModal } from '@/components/create-post-modal';
 
-interface Post {
-  id: string;
-  title: string;
-  content: string;
-  tags: string[];
-  mediaUrl?: string;
-  createdAt: string;
-  author: {
+interface WebSocketMessage {
+  type?: string;
+  data?: Post;
+  timestamp?: number;
+  id?: string;
+  title?: string;
+  content?: string;
+  tags?: string[];
+  mediaUrl?: string | null;
+  author?: {
     id: number;
     email: string;
   };
-  likesCount: number;
-  commentsCount: number;
-  liked: boolean;
+  authorId?: number;
+  commentsCount?: number;
+  createdAt?: string;
+  isPublished?: boolean;
+  liked?: boolean;
+  likesCount?: number;
+  updatedAt?: string;
 }
-/*
-interface PostsResponse {
-  posts: Post[];
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
-}*/
 
 type SortOption = {
   label: string;
@@ -68,7 +67,8 @@ export function PostCarousel() {
   const [sortOption, setSortOption] = useState<SortOption>(SORT_OPTIONS[0]);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true); 
+  const [hasMore, setHasMore] = useState(true);
+  const [showCreatePost, setShowCreatePost] = useState(false);
   const observer = useRef<IntersectionObserver | null>(null);
   const lastPostRef = useCallback((node: HTMLDivElement | null) => {
     if (loading) return;
@@ -87,12 +87,11 @@ export function PostCarousel() {
 
   const handlePostClose = () => {
     setSelectedPost(null);
-    
   };
 
   const handlePostLike = async (postId: string) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/posts/${postId}/like`, {
+      const response = await fetch(`${API_URL}/api/posts/${postId}/like`, {
         method: 'POST',
         credentials: 'include',
       });
@@ -101,14 +100,14 @@ export function PostCarousel() {
         throw new Error('Failed to like post');
       }
 
-      setPosts(prev => prev.map(p => 
-        p.id === postId 
+      setPosts((prev: Post[]) => prev.map(p => 
+        p.id === postId
           ? { ...p, liked: !p.liked, likesCount: p.liked ? p.likesCount - 1 : p.likesCount + 1 }
           : p
       ));
 
       if (selectedPost?.id === postId) {
-        setSelectedPost(prev => prev ? {
+        setSelectedPost((prev: Post | null) => prev ? {
           ...prev,
           liked: !prev.liked,
           likesCount: prev.liked ? prev.likesCount - 1 : prev.likesCount + 1
@@ -121,14 +120,14 @@ export function PostCarousel() {
   };
 
   const handleCommentAdded = (postId: string) => {
-    setPosts(prev => prev.map(p => 
+    setPosts((prev: Post[]) => prev.map(p => 
       p.id === postId 
         ? { ...p, commentsCount: p.commentsCount + 1 }
         : p
     ));
 
     if (selectedPost?.id === postId) {
-      setSelectedPost(prev => prev ? {
+      setSelectedPost((prev: Post | null) => prev ? {
         ...prev,
         commentsCount: prev.commentsCount + 1
       } : null);
@@ -146,7 +145,7 @@ export function PostCarousel() {
       queryParams.append('page', pageNum.toString());
       queryParams.append('limit', '10');
 
-      const response = await fetch(`http://localhost:3001/api/posts?${queryParams}`, {
+      const response = await fetch(`${API_URL}/api/posts?${queryParams}`, {
         credentials: 'include',
       });
 
@@ -170,7 +169,7 @@ export function PostCarousel() {
 
   const fetchTags = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/posts/tags', {
+      const response = await fetch(`${API_URL}/api/posts/tags`, {
         credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to fetch tags');
@@ -183,9 +182,9 @@ export function PostCarousel() {
   };
 
   const toggleTag = (tag: string) => {
-    setSelectedTags(prev => 
+    setSelectedTags((prev: string[]) => 
       prev.includes(tag)
-        ? prev.filter(t => t !== tag)
+        ? prev.filter((t: string) => t !== tag)
         : [...prev, tag]
     );
   };
@@ -209,18 +208,132 @@ export function PostCarousel() {
     fetchTags();
   }, []);
 
+  // Initialize WebSocket connection
   useEffect(() => {
-    const socket = getSocket();
+    initializeWebSocket();
     
+    // Subscribe to WebSocket events
+    on<WebSocketMessage>('new_post', (message) => {
+      console.log('New post received:', message);
+      // Handle both direct post objects and wrapped messages
+      const post = message.type === 'new_post' && message.data ? message.data : message;
+      if (post.id && Array.isArray(post.tags)) {
+        // Prefix mediaUrl with API_URL if it exists and doesn't already have a full URL
+        const processedPost = {
+          id: post.id,
+          title: post.title || '',
+          content: post.content || '',
+          tags: post.tags,
+          mediaUrl: post.mediaUrl && !post.mediaUrl.startsWith('http') 
+            ? `${API_URL}/api${post.mediaUrl}`
+            : post.mediaUrl || undefined,
+          author: post.author || { id: 0, email: '' },
+          likesCount: post.likesCount || 0,
+          commentsCount: post.commentsCount || 0,
+          liked: post.liked ?? false,
+          createdAt: post.createdAt || new Date().toISOString()
+        } as Post;
+        setPosts(prevPosts => {
+          // Check if post already exists
+          if (prevPosts.some(existingPost => existingPost.id === processedPost.id)) {
+            return prevPosts;
+          }
+          return [processedPost, ...prevPosts];
+        });
+      } else {
+        console.error('Invalid post data received:', message);
+      }
+    });
+
+    on<WebSocketMessage>('post_updated', (message) => {
+      console.log('Post updated:', message);
+      // Handle both direct post objects and wrapped messages
+      const post = message.type === 'post_updated' && message.data ? message.data : message;
+      if (post.id && Array.isArray(post.tags)) {
+        // Prefix mediaUrl with API_URL if it exists and doesn't already have a full URL
+        const processedPost = {
+          id: post.id,
+          title: post.title || '',
+          content: post.content || '',
+          tags: post.tags,
+          mediaUrl: post.mediaUrl && !post.mediaUrl.startsWith('http') 
+            ? `${API_URL}/api${post.mediaUrl}`
+            : post.mediaUrl || undefined,
+          author: post.author || { id: 0, email: '' },
+          likesCount: post.likesCount || 0,
+          commentsCount: post.commentsCount || 0,
+          liked: post.liked ?? false,
+          createdAt: post.createdAt || new Date().toISOString()
+        } as Post;
+        setPosts(prevPosts => 
+          prevPosts.map(existingPost => 
+            existingPost.id === processedPost.id ? processedPost : existingPost
+          )
+        );
+      } else {
+        console.error('Invalid post data received:', message);
+      }
+    });
+
+    on<WebSocketMessage>('post_deleted', (message) => {
+      console.log('Post deleted:', message);
+      // Handle both direct post objects and wrapped messages
+      const post = message.type === 'post_deleted' && message.data ? message.data : message;
+      if (post.id) {
+        setPosts(prevPosts => 
+          prevPosts.filter(existingPost => existingPost.id !== post.id)
+        );
+      } else {
+        console.error('Invalid post data received:', message);
+      }
+    });
+
+    on<WebSocketMessage[]>('recent_messages', (messages) => {
+      console.log('Recent messages received:', messages);
+      if (Array.isArray(messages)) {
+        // Extract and validate post data from messages
+        const validPosts = messages
+          .map(msg => msg.type === 'new_post' && msg.data ? msg.data : msg)
+          .filter((post): post is Post => 
+            post.id !== undefined && 
+            Array.isArray(post.tags)
+          )
+          .map(post => ({
+            id: post.id,
+            title: post.title || '',
+            content: post.content || '',
+            tags: post.tags,
+            mediaUrl: post.mediaUrl && !post.mediaUrl.startsWith('http') 
+              ? `${API_URL}/api${post.mediaUrl}`
+              : post.mediaUrl || undefined,
+            author: post.author || { id: 0, email: '' },
+            likesCount: post.likesCount || 0,
+            commentsCount: post.commentsCount || 0,
+            liked: post.liked ?? false,
+            createdAt: post.createdAt || new Date().toISOString()
+          } as Post));
+        
+        setPosts(prevPosts => {
+          // Filter out posts that already exist
+          const uniqueNewPosts = validPosts.filter(
+            newPost => !prevPosts.some(existingPost => existingPost.id === newPost.id)
+          );
+          // Only add new posts if there are any
+          return uniqueNewPosts.length > 0 ? [...uniqueNewPosts, ...prevPosts] : prevPosts;
+        });
+      }
+    });
+
     // Cleanup on unmount
     return () => {
-      socket.off('new-post');
+      const socket = getSocket();
+      socket.disconnect();
     };
   }, []);
 
   const handleRefresh = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/posts', {
+      const response = await fetch(`${API_URL}/api/posts`, {
         credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to fetch posts');
@@ -234,10 +347,20 @@ export function PostCarousel() {
     }
   };
 
+  const handlePostCreated = (newPost: Post) => {
+    setPosts(prevPosts => {
+      // Check if post already exists
+      if (prevPosts.some(existingPost => existingPost.id === newPost.id)) {
+        return prevPosts;
+      }
+      return [newPost, ...prevPosts];
+    });
+  };
+
   return (
     <div className="relative">
       <div className="h-[calc(100vh-4rem)] flex flex-col">
-        <NewPostNotification onRefresh={handleRefresh} />
+        <NewPostNotification onRefresh={handleRefresh} currentPosts={posts} />
 
         {/* Search, Sort, and Filter Section */}
         <div className="flex-none space-y-4 p-4">
@@ -269,6 +392,9 @@ export function PostCarousel() {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+            <Button onClick={() => setShowCreatePost(true)}>
+              Create Post
+            </Button>
           </div>
           
           <ScrollShadow>
@@ -287,7 +413,6 @@ export function PostCarousel() {
                 </Badge>
               ))}
             </div>
-           
           </ScrollShadow>
         </div>
 
@@ -310,7 +435,7 @@ export function PostCarousel() {
                         </p>
                       </div>
                       <div className="flex gap-2">
-                        {post.tags.map(tag => (
+                        {post.tags && Array.isArray(post.tags) && post.tags.map(tag => (
                           <Badge
                             key={tag}
                             variant="secondary"
@@ -373,7 +498,6 @@ export function PostCarousel() {
                   </div>
                 )}
               </div>
-           
           </ScrollShadow>
         </div>
         {/* Post Detail Modal */}
@@ -385,7 +509,13 @@ export function PostCarousel() {
             onCommentAdded={() => handleCommentAdded(selectedPost.id)}
           />
         )}
+        {/* Create Post Modal */}
+        <CreatePostModal
+          isOpen={showCreatePost}
+          onClose={() => setShowCreatePost(false)}
+          onPostCreated={handlePostCreated}
+        />
       </div>
     </div>
   );
-} 
+}

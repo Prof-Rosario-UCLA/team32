@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { API_URL } from '@/config/api';
 
 interface User {
   email: string;
@@ -25,7 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/users/me', {
+      const res = await fetch(`${API_URL}/api/users/me`, {
         credentials: 'include',
       });
       
@@ -46,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3001/api/users/login', {
+      const response = await fetch(`${API_URL}/api/users/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -73,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signup = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3001/api/users/register', {
+      const response = await fetch(`${API_URL}/api/users/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -99,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      await fetch('http://localhost:3001/api/users/logout', {
+      await fetch(`${API_URL}/api/users/logout`, {
         method: 'POST',
         credentials: 'include',
       });
