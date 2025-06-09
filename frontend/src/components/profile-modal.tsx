@@ -155,7 +155,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         </div>
 
         {/* Fixed Footer */}
-        <div className="flex-none p-4 bg-muted/50">
+        <div className="flex-none p-4">
           <Button
             variant="destructive"
             className="w-full"
