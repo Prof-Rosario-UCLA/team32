@@ -83,8 +83,10 @@ jobs:
         run: |-
           cd backend
           DOCKER_TAG="${GAR_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/backend:${GITHUB_SHA}"
-          docker build --tag "${DOCKER_TAG}" .
+          LATEST_TAG="${GAR_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/backend:latest"
+          docker build --tag "${DOCKER_TAG}" --tag "${LATEST_TAG}" .
           docker push "${DOCKER_TAG}"
+          docker push "${LATEST_TAG}"
 
       - name: 'Build and push Frontend'
         run: |-
