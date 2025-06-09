@@ -1,0 +1,89 @@
+System Architecture:
+The application follows a modern client-server architecture with the following components:
+- Frontend (Next.js/React) <-> Backend (Express) <-> Database (PostgreSQL)
+- Frontend <-> WebSocket Server (Socket.IO) for real-time updates
+- Backend <-> Redis Cache for performance optimization
+- Backend <-> Cloudflare R2 (AWS S3 not good for small projects) for media storage
+- All external communications use HTTPS/WSS protocols
+- Authentication flow: Frontend <-> Backend <-> JWT <-> HTTP-only cookies
+
+Security and Privacy Features:
+1. Database Security:
+   - Prisma ORM (https://www.prisma.io/docs/concepts/security) prevents SQL injection through parameterized queries and type-safe database access
+   - Database credentials are stored in environment variables
+   - Row-level security in PostgreSQL for user data isolation
+
+2. Authentication & Authorization:
+   - JWT tokens stored in HTTP-only cookies prevent XSS attacks
+   - CSRF protection using SameSite 'lax' cookie attributes
+   - Rate limiting and slow down middleware prevents brute force attacks and delaying them.
+   - Session management with secure cookie settings
+
+3. Data Protection:
+   - Input sanitization using Zod for request validation
+   - XSS prevention through React's built-in escaping and Content Security Policy
+   - Media uploads are validated for file types and sizes (also to prevent blowing up the free R2)
+
+4. Privacy:
+   - Cookie consent banner informs users about data collection
+   - No sensitive user data is stored in client-side storage
+   - Media files are served through secure CDN with access controls
+
+5. Infrastructure Security:
+   - All API endpoints are served over HTTPS
+   - WebSocket connections use WSS (secure WebSocket)
+   - Environment variables for sensitive configuration
+
+For detailed security documentation:
+- Prisma Security: https://www.prisma.io/docs/concepts/security
+- Next.js Security: https://nextjs.org/docs/advanced-features/security-headers
+- Express Security: https://expressjs.com/en/advanced/best-practice-security.html
+
+
+REQUIREMENTS:
+1. Semantic HTML5: The application uses semantic HTML5 elements like <header> for the navigation bar, <main> for the post carousel, <article> for individual posts, and <dialog> for modals, while minimizing generic <div> tags.
+   Files: frontend/src/app/layout.tsx, frontend/src/components/post-carousel.tsx, frontend/src/components/post-detail.tsx
+
+2. Web APIs: The application implements the MediaDevices API to allow users to record audio or take photos using their device's microphone or camera.
+   Files: frontend/src/components/post-form.tsx, frontend/src/lib/media-utils.ts
+
+3. Responsive Design: The application is fully responsive using Tailwind CSS's mobile-first approach, with a fluid layout that adapts from 320px mobile screens up to desktop displays, featuring a responsive grid system and flexible components.
+   Files: frontend/src/app/globals.css, frontend/src/components/post-carousel.tsx, frontend/src/components/ui/*
+
+4. Offline Support: The application functions as a PWA with a service worker that caches essential assets and provides an offline fallback page, displaying a "Fetching data..." message when offline.
+   Files: frontend/public/sw.js, frontend/src/utils/service-worker.ts, frontend/public/manifest.json
+
+5. HTTPS: The application is served over HTTPS using secure connections for all API endpoints and WebSocket (wss) communications.
+   Files: backend/src/server.js, frontend/src/lib/socket.ts, frontend/src/config/api.ts
+
+6. Single Page Application: The application is built as a SPA using Next.js and React, with client-side routing and dynamic content loading, eliminating traditional page refreshes. We do not have any subdomains and put everything we could into a popup (dialog)
+   Files: frontend/src/app/*, frontend/src/components/*
+
+7. CSS Processing: The application uses Tailwind CSS for styling, providing a utility-first approach with responsive design utilities and custom component classes.
+   Files: frontend/tailwind.config.js, frontend/src/app/globals.css
+
+8. Authentication: The application implements JWT-based authentication with secure HTTP-only cookies, including a session management system with stateless requests.
+   Files: backend/middleware/auth.js, backend/routes/auth.js, frontend/src/lib/auth.ts
+
+9. Security: The application implements security best practices including CSRF protection, XSS prevention through proper input sanitization, and SQL injection prevention using Prisma ORM.
+   Files: backend/middleware/auth.js, backend/routes/posts.js, frontend/src/lib/api.ts
+
+10. Caching and Database: The application uses Redis for caching layer and PostgreSQL with Prisma ORM
+    Files: backend/prisma/schema.prisma, backend/redis/client.js, backend/routes/posts.js
+
+11. Backend Framework: The application uses Node.js with Express for the backend, providing a REST API server with middleware for authentication, rate limiting, and error handling.
+    Files: backend/src/server.js, backend/routes/*, backend/middleware/*
+
+12. PWA Features: The application is installable as a PWA with a service worker that caches assets and provides offline functionality, including a manifest file and appropriate icons.
+    Files: frontend/public/manifest.json, frontend/public/sw.js, frontend/src/utils/service-worker.ts
+
+13. WebAssembly: The application does not currently use WebAssembly modules.
+
+14. Real-time Communication: The application implements real-time features using Socket.IO for instant post updates, likes, and comments, providing a responsive user experience.
+    Files: backend/websocket/client.js, frontend/src/lib/socket.ts, frontend/src/components/post-carousel.tsx
+
+15. Frontend Framework: The application is built using React with Next.js
+    Files: frontend/src/app/*, frontend/src/components/*, frontend/next.config.js
+
+16. Accessibility: The application implements ARIA attributes, semantic HTML, keyboard navigation, and proper color contrast ratios, ensuring accessibility for all users including screen reader compatibility.
+    Files: frontend/src/components/ui/*, frontend/src/components/post-carousel.tsx, frontend/src/components/post-detail.tsx

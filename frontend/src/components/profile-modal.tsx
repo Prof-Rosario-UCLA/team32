@@ -88,7 +88,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 <AvatarFallback className="text-lg">{initials}</AvatarFallback>
               </Avatar>
               <div>
-                <h2 className="text-2xl font-semibold tracking-tight">Profile</h2>
+                <h2 className="text-2xl font-semibold tracking-tight text-center">Profile</h2>
                 <p className="text-sm text-muted-foreground">
                   Manage your account and view your activity
                 </p>
@@ -102,7 +102,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 <span className="text-2xl font-bold">{stats.totalLikes}</span>
                 <span className="text-xs text-muted-foreground">Total Likes</span>
               </div>
-              <div className="flex flex-col items-center gap-1 rounded-lg border p-3">
+              <div className="flex flex-col items-center gap-1 rounded-lg border p-3 text-center">
                 <MessageSquare className="h-5 w-5 text-blue-500" />
                 <span className="text-2xl font-bold">{stats.totalComments}</span>
                 <span className="text-xs text-muted-foreground">Total Comments</span>
@@ -154,7 +154,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         </div>
 
         {/* Fixed Footer */}
-        <div className="flex-none p-4 bg-muted/50">
+        <div className="flex-none p-4">
           <Button
             variant="destructive"
             className="w-full"
