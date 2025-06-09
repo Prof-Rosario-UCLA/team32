@@ -6,14 +6,6 @@ on:
   pull_request:
     branches: [ main ]
 
-env:
-  PROJECT_ID: cs144-25s-brandonle
-  GKE_CLUSTER: bruinhottake-cluster
-  GKE_ZONE: us-central1-a
-  DEPLOYMENT_NAME: bruinhottake
-  WIF_PROVIDER: projects/${{ env.PROJECT_ID }}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider
-  SERVICE_ACCOUNT: github-actions@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
-
 jobs:
   setup-build-deploy:
     name: Setup, Build, and Deploy
@@ -21,6 +13,14 @@ jobs:
     permissions:
       contents: 'read'
       id-token: 'write'
+    
+    env:
+      PROJECT_ID: cs144-25s-brandonle
+      GKE_CLUSTER: bruinhottake-cluster
+      GKE_ZONE: us-central1-a
+      DEPLOYMENT_NAME: bruinhottake
+      WIF_PROVIDER: projects/cs144-25s-brandonle/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider
+      SERVICE_ACCOUNT: github-actions@cs144-25s-brandonle.iam.gserviceaccount.com
 
     steps:
     - name: Checkout
