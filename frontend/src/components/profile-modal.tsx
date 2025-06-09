@@ -79,7 +79,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogTitle></DialogTitle>
-      <DialogContent className="sm:max-w-[800px] h-[80vh] flex flex-col p-0">
+      <DialogContent className="sm:max-w-[800px] h-[90vh] flex flex-col p-0">
         {/* Fixed Header */}
         <div className="flex-none p-6 border-b">
           <div className="space-y-4">
@@ -89,7 +89,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 <AvatarFallback className="text-lg">{initials}</AvatarFallback>
               </Avatar>
               <div>
-                <h2 className="text-2xl font-semibold tracking-tight">Profile</h2>
+                <h2 className="text-2xl font-semibold tracking-tight text-center">Profile</h2>
                 <p className="text-sm text-muted-foreground">
                   Manage your account and view your activity
                 </p>
@@ -98,19 +98,17 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4">
-              <div className="flex flex-col items-center justify-center text-center gap-1 rounded-lg border p-3 w-full h-30">
+              <div className="flex flex-col items-center gap-1 rounded-lg border p-3">
                 <Flame className="h-5 w-5 text-orange-500" />
                 <span className="text-2xl font-bold">{stats.totalLikes}</span>
                 <span className="text-xs text-muted-foreground">Total Likes</span>
               </div>
-
-              <div className="flex flex-col items-center justify-center text-center gap-1 rounded-lg border p-3 w-full h-30">
-                <MessageSquare className="h-4 w-5 text-blue-500" />
+              <div className="flex flex-col items-center gap-1 rounded-lg border p-3 text-center">
+                <MessageSquare className="h-5 w-5 text-blue-500" />
                 <span className="text-2xl font-bold">{stats.totalComments}</span>
                 <span className="text-xs text-muted-foreground">Total Comments</span>
               </div>
-
-              <div className="flex flex-col items-center justify-center text-center gap-1 rounded-lg border p-3 w-full h-30">
+              <div className="flex flex-col items-center gap-1 rounded-lg border p-3">
                 <User className="h-5 w-5 text-green-500" />
                 <span className="text-2xl font-bold">{stats.totalPosts}</span>
                 <span className="text-xs text-muted-foreground">Total Posts</span>
@@ -130,13 +128,6 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     <span className="font-medium">Email:</span> {user?.email}
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">
-                    <span className="font-medium">Member since:</span>{" "}
-                    {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}
-                  </span>
-                </div>
               </div>
             </div>
           </div>
@@ -151,7 +142,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 Your Posts
               </h3>
             </div>
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 overflow-hidden pt-4">
               <PostCarousel
                 initialPosts={posts}
                 onLoadMore={handleLoadMore}
