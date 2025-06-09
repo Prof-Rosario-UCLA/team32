@@ -36,7 +36,7 @@ name: 'Build and Deploy to GKE'
 on:
   push:
     branches:
-      - '"main"'
+      - main
 
 env:
   PROJECT_ID: 'cs144-25s-brandonle'
@@ -103,14 +103,15 @@ jobs:
 
       - name: 'Deploy to GKE'
         run: |-
+          cd k8s
           # Update backend image
-          ./kustomize edit set image backend=$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/backend:$GITHUB_SHA
-          ./kustomize build . | kubectl apply -f -
+          ../kustomize edit set image backend=$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/backend:$GITHUB_SHA
+          ../kustomize build . | kubectl apply -f -
           kubectl rollout status deployment/backend -n ucla-forum
 
           # Update frontend image
-          ./kustomize edit set image frontend=$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/frontend:$GITHUB_SHA
-          ./kustomize build . | kubectl apply -f -
+          ../kustomize edit set image frontend=$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/frontend:$GITHUB_SHA
+          ../kustomize build . | kubectl apply -f -
           kubectl rollout status deployment/frontend -n ucla-forum
 
           kubectl get services -o wide -n ucla-forum
