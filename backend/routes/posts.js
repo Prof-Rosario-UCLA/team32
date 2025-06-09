@@ -728,7 +728,7 @@ router.post('/:id/comments', verifyToken, async (req, res) => {
 });
 
 // Get posts by user ID with pagination
-router.get('/user/:userId', async (req, res) => {
+router.get('/user/:userId', verifyToken, async (req, res) => {
   try {
     const { userId } = req.params;
     const { page = 1, limit = 5 } = req.query;
