@@ -4,7 +4,10 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface User {
+  id: number;
   email: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface AuthContextType {
@@ -28,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const res = await fetch('http://localhost:3001/api/users/me', {
         credentials: 'include',
       });
-      
+
       if (res.ok) {
         const userData = await res.json();
         setUser(userData);
