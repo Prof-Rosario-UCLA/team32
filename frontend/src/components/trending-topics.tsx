@@ -34,31 +34,28 @@ export function TrendingTopics() {
     useEffect(() => {
         fetchTrendingTopics();
 
-        // Set up socket.io listeners for real-time updates
         const socket = getSocket();
 
-        // Refresh trending topics when:
-        // 1. A new post is created
-        // 2. A post is liked/unliked
-        // 3. A comment is added
+        // refresh trending topics when:
+        // 1. a new post is created
+        // 2. a post is updated
+        // 3. a post is deleted
         const handlePostUpdate = () => {
             fetchTrendingTopics();
         };
 
-        socket.on('new-post', handlePostUpdate);
-        socket.on('post-liked', handlePostUpdate);
-        socket.on('post-unliked', handlePostUpdate);
-        socket.on('new-comment', handlePostUpdate);
+        socket.on('new_post', handlePostUpdate);
+        socket.on('post_updated', handlePostUpdate);
+        socket.on('post_deleted', handlePostUpdate);
 
         // Refresh trending topics every 5 minutes
         const interval = setInterval(fetchTrendingTopics, 5 * 60 * 1000);
 
         return () => {
             clearInterval(interval);
-            socket.off('new-post', handlePostUpdate);
-            socket.off('post-liked', handlePostUpdate);
-            socket.off('post-unliked', handlePostUpdate);
-            socket.off('new-comment', handlePostUpdate);
+            socket.off('new_post', handlePostUpdate);
+            socket.off('post_updated', handlePostUpdate);
+            socket.off('post_deleted', handlePostUpdate);
         };
     }, []);
 
