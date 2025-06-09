@@ -210,7 +210,7 @@ router.post('/upload-voice', verifyToken, async (req, res) => {
 });
 
 // Get posts with pagination, filtering, and search
-router.get('/', async (req, res) => {
+router.get('/', verifyToken, async (req, res) => {
   try {
     const {
       page = 1,
