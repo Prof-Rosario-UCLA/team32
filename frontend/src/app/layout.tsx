@@ -4,7 +4,8 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/auth-context";
 import { ThemeProvider } from "@/contexts/theme-context";
 import { Toaster } from 'sonner';
-import { registerServiceWorker } from "@/utils/service-worker";
+import { NetworkStatus } from "@/components/network-status";
+import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -51,11 +52,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Register service worker on client side
-  if (typeof window !== 'undefined') {
-    registerServiceWorker();
-  }
-
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -72,7 +68,11 @@ export default function RootLayout({
       <body className={inter.className}>
         <Toaster position="bottom-right" />
         <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            {children}
+            <NetworkStatus />
+            <ServiceWorkerRegistration />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
