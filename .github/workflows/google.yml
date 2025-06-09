@@ -76,8 +76,6 @@ jobs:
           password: '${{ steps.auth.outputs.auth_token }}'
           registry: '${{ env.GAR_LOCATION }}-docker.pkg.dev'
       
-      # Add these debug steps after the "Docker Auth" step in your workflow
-
       - name: 'Test Authentication'
         run: |-
           echo "Testing gcloud authentication..."
