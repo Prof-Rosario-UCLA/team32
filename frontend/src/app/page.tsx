@@ -1,13 +1,14 @@
 'use client';
 
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Flame, TrendingUp, Zap } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { NavBar } from "@/components/nav-bar";
 import { PostCarousel } from "@/components/post-carousel";
 import { useState } from "react";
 import { AuthModals } from "@/components/auth-modals";
-import CookieConsentBanner from "@/components/cookie-consent-banner";
+import { motion } from "framer-motion";
+import { TrendingTopics } from "@/components/trending-topics";
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -32,11 +33,32 @@ export default function Home() {
             <div className="grid w-full gap-8 md:grid-cols-2">
               {/* Left Column - Hero */}
               <div className="flex flex-col justify-center space-y-6">
-                <div>
+                <div className="relative">
+                  <motion.div
+                    className="absolute -left-4 -top-4 text-orange-500"
+                    animate={{
+                      scale: [1, 1.2, 1],
+                      rotate: [-5, 5, -5],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  >
+                    <Flame className="h-8 w-8" />
+                  </motion.div>
                   <h2 className="mb-4 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
                     Share Your{" "}
-                    <span className="bg-gradient-to-r from-orange-500 via-red-500 to-orange-500 bg-clip-text text-transparent">
+                    <span className="relative bg-gradient-to-r from-orange-500 via-red-500 to-orange-500 bg-clip-text text-transparent">
                       Hot Takes
+                      <motion.span
+                        className="absolute -right-6 top-0 text-orange-500"
+                        animate={{ opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                      >
+                        🔥
+                      </motion.span>
                     </span>
                   </h2>
                   <p className="text-lg text-muted-foreground">
@@ -44,42 +66,68 @@ export default function Home() {
                   </p>
                 </div>
                 <div className="flex gap-4">
-                  <Button size="lg" onClick={() => setShowSignup(true)}>
-                    Join Now <ArrowRight className="ml-2 h-4 w-4" />
+                  <Button
+                    size="lg"
+                    onClick={() => setShowSignup(true)}
+                    className="group relative overflow-hidden bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                  >
+                    <span className="relative z-10 flex items-center">
+                      Join Now <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </span>
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-orange-600 to-red-600"
+                      initial={{ x: "-100%" }}
+                      whileHover={{ x: "0%" }}
+                      transition={{ duration: 0.3 }}
+                    />
                   </Button>
                 </div>
+
+                {/* Trending Topics Section */}
+                <TrendingTopics />
               </div>
 
-              {/* Right Column - Feature Cards + Preview */}
+              {/* Right Column - Feature Cards */}
               <div className="flex items-center justify-center">
                 <div className="w-full max-w-md space-y-4">
-                  <div className="rounded-lg border bg-card p-6 shadow-sm">
-                    <h3 className="text-lg font-semibold">Real-time Updates</h3>
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className="rounded-lg border bg-card p-6 shadow-sm transition-shadow hover:shadow-md"
+                  >
+                    <div className="mb-2 flex items-center">
+                      <Flame className="mr-2 h-5 w-5 text-orange-500" />
+                      <h3 className="text-lg font-semibold">Real-time Updates</h3>
+                    </div>
                     <p className="text-sm text-muted-foreground">
                       Stay connected with the latest campus discussions and trending topics.
                     </p>
-                  </div>
-                  <div className="rounded-lg border bg-card p-6 shadow-sm">
-                    <h3 className="text-lg font-semibold">Engage & Connect</h3>
+                  </motion.div>
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className="rounded-lg border bg-card p-6 shadow-sm transition-shadow hover:shadow-md"
+                  >
+                    <div className="mb-2 flex items-center">
+                      <Zap className="mr-2 h-5 w-5 text-orange-500" />
+                      <h3 className="text-lg font-semibold">Engage & Connect</h3>
+                    </div>
                     <p className="text-sm text-muted-foreground">
                       Like, comment, and interact with posts from your fellow Bruins.
                     </p>
-                  </div>
+                  </motion.div>
                 </div>
               </div>
             </div>
           )}
         </div>
-        <CookieConsentBanner />
       </main>
 
       <AuthModals
         isLoginOpen={showLogin}
         isSignupOpen={showSignup}
-        onLoginClose={() => {setShowLogin(false)}}
+        onLoginClose={() => { setShowLogin(false) }}
         onSignupClose={() => setShowSignup(false)}
         onSignupOpen={() => setShowSignup(true)}
-        onLoginOpen={() => {setShowLogin(true)}}
+        onLoginOpen={() => { setShowLogin(true) }}
       />
     </div>
   );
