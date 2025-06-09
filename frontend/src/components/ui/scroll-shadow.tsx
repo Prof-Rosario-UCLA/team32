@@ -13,7 +13,7 @@ export function ScrollShadow({ className, children, ...props }: ScrollShadowProp
 
   const handleScroll = React.useCallback(() => {
     if (!containerRef.current) return;
-    
+
     const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
     setShowTopShadow(scrollTop > 0);
     setShowBottomShadow(scrollTop + clientHeight < scrollHeight);

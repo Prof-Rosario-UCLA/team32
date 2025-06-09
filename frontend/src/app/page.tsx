@@ -16,129 +16,138 @@ export default function Home() {
   const [showLogin, setShowLogin] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-orange-950/5">
+    <div className={`min-h-screen ${user ? 'bg-gradient-to-b from-orange-950/10 via-background to-orange-950/5 relative overflow-hidden' : 'bg-gradient-to-b from-background via-background to-orange-950/5'}`}>
+      {user && (
+        <>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(249,115,22,0.1),transparent_50%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(249,115,22,0.05),transparent_50%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(249,115,22,0.05),transparent_50%)]" />
+        </>
+      )}
       <NavBar />
-      <main className="container mx-auto flex h-[calc(100vh-4rem)] flex-col px-4">
-        <div className="flex flex-1 items-center">
-          {loading ? (
+      <main className="container mx-auto h-[calc(100vh-4rem)] px-4 relative overflow-hidden">
+        {loading ? (
+          <div className="h-full flex items-center">
             <div className="w-full animate-pulse space-y-4">
               <div className="h-8 w-3/4 rounded bg-muted" />
               <div className="h-4 w-1/2 rounded bg-muted" />
             </div>
-          ) : user ? (
-            <div className="w-full max-w-2xl mx-auto">
-              <PostCarousel />
+          </div>
+        ) : user ? (
+          <div className="h-full flex flex-col">
+            <div className="flex-1 min-h-0 max-w-2xl mx-auto w-full">
+              <PostCarousel disableScrollShadows={true} />
             </div>
-          ) : (
-            <div className="grid w-full gap-8 md:grid-cols-2">
-              {/* Left Column - Hero */}
-              <div className="flex flex-col justify-center space-y-6">
-                <div className="relative">
-                  <motion.div
-                    className="absolute -left-4 -top-4"
-                    animate={{
-                      scale: [1, 1.2, 1],
-                      rotate: [-5, 5, -5],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                  >
-                    <Flame className="h-8 w-8 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
-                  </motion.div>
-                  <h2 className="mb-4 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-                    Share Your{" "}
-                    <span className="relative inline-block">
-                      <span className="relative z-10 bg-gradient-to-r from-orange-500 via-red-500 to-orange-500 bg-clip-text text-transparent">
-                        Hot Takes
-                      </span>
-                      <motion.span
-                        className="absolute -right-6 top-0 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]"
-                        animate={{
-                          opacity: [0.5, 1, 0.5],
-                          scale: [1, 1.2, 1],
-                        }}
-                        transition={{
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeInOut"
-                        }}
-                      >
-                        🔥
-                      </motion.span>
-                      <motion.div
-                        className="absolute -inset-1 bg-gradient-to-r from-orange-500/20 via-red-500/20 to-orange-500/20 blur-xl"
-                        animate={{
-                          opacity: [0.3, 0.5, 0.3],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                      />
+          </div>
+        ) : (
+          <div className="grid w-full gap-8 md:grid-cols-2">
+            {/* Left Column - Hero */}
+            <div className="flex flex-col justify-center space-y-6">
+              <div className="relative">
+                <motion.div
+                  className="absolute -left-4 -top-4"
+                  animate={{
+                    scale: [1, 1.2, 1],
+                    rotate: [-5, 5, -5],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  <Flame className="h-8 w-8 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
+                </motion.div>
+                <h2 className="mb-4 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+                  Share Your{" "}
+                  <span className="relative inline-block">
+                    <span className="relative z-10 bg-gradient-to-r from-orange-500 via-red-500 to-orange-500 bg-clip-text text-transparent">
+                      Hot Takes
                     </span>
-                  </h2>
-                  <p className="text-lg text-muted-foreground">
-                    Join the conversation with fellow Bruins. Share your thoughts on campus life, academics, and more.
-                  </p>
-                </div>
-                <div className="flex gap-4">
-                  <Button
-                    size="lg"
-                    onClick={() => setShowSignup(true)}
-                    className="group relative overflow-hidden bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all duration-300"
-                  >
-                    <span className="relative z-10 flex items-center">
-                      Join Now <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </span>
+                    <motion.span
+                      className="absolute -right-6 top-0 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]"
+                      animate={{
+                        opacity: [0.5, 1, 0.5],
+                        scale: [1, 1.2, 1],
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    >
+                      🔥
+                    </motion.span>
                     <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-orange-600 to-red-600"
-                      initial={{ x: "-100%" }}
-                      whileHover={{ x: "0%" }}
-                      transition={{ duration: 0.3 }}
+                      className="absolute -inset-1 bg-gradient-to-r from-orange-500/20 via-red-500/20 to-orange-500/20 blur-xl"
+                      animate={{
+                        opacity: [0.3, 0.5, 0.3],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
                     />
-                  </Button>
-                </div>
-
-                {/* Trending Topics Section */}
-                <TrendingTopics />
+                  </span>
+                </h2>
+                <p className="text-lg text-muted-foreground">
+                  Join the conversation with fellow Bruins. Share your thoughts on campus life, academics, and more.
+                </p>
+              </div>
+              <div className="flex gap-4">
+                <Button
+                  size="lg"
+                  onClick={() => setShowSignup(true)}
+                  className="group relative overflow-hidden bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all duration-300"
+                >
+                  <span className="relative z-10 flex items-center">
+                    Join Now <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </span>
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-orange-600 to-red-600"
+                    initial={{ x: "-100%" }}
+                    whileHover={{ x: "0%" }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </Button>
               </div>
 
-              {/* Right Column - Feature Cards */}
-              <div className="flex items-center justify-center">
-                <div className="w-full max-w-md space-y-4">
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="rounded-lg border bg-card/50 backdrop-blur-sm p-6 shadow-lg shadow-orange-500/5 hover:shadow-orange-500/10 transition-all duration-300"
-                  >
-                    <div className="mb-2 flex items-center">
-                      <Flame className="mr-2 h-5 w-5 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.3)]" />
-                      <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">Real-time Updates</h3>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Stay connected with the latest campus discussions and trending topics.
-                    </p>
-                  </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="rounded-lg border bg-card/50 backdrop-blur-sm p-6 shadow-lg shadow-orange-500/5 hover:shadow-orange-500/10 transition-all duration-300"
-                  >
-                    <div className="mb-2 flex items-center">
-                      <Zap className="mr-2 h-5 w-5 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.3)]" />
-                      <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">Engage & Connect</h3>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Like, comment, and interact with posts from your fellow Bruins.
-                    </p>
-                  </motion.div>
-                </div>
+              {/* Trending Topics Section */}
+              <TrendingTopics />
+            </div>
+
+            {/* Right Column - Feature Cards */}
+            <div className="flex items-center justify-center">
+              <div className="w-full max-w-md space-y-4">
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  className="rounded-lg border bg-card/50 backdrop-blur-sm p-6 shadow-lg shadow-orange-500/5 hover:shadow-orange-500/10 transition-all duration-300"
+                >
+                  <div className="mb-2 flex items-center">
+                    <Flame className="mr-2 h-5 w-5 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.3)]" />
+                    <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">Real-time Updates</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Stay connected with the latest campus discussions and trending topics.
+                  </p>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  className="rounded-lg border bg-card/50 backdrop-blur-sm p-6 shadow-lg shadow-orange-500/5 hover:shadow-orange-500/10 transition-all duration-300"
+                >
+                  <div className="mb-2 flex items-center">
+                    <Zap className="mr-2 h-5 w-5 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.3)]" />
+                    <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">Engage & Connect</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Like, comment, and interact with posts from your fellow Bruins.
+                  </p>
+                </motion.div>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </main>
 
       <AuthModals

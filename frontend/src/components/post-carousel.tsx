@@ -66,6 +66,7 @@ interface PostCarouselProps {
   hasMore?: boolean;
   isLoading?: boolean;
   showSortOptions?: boolean;
+  disableScrollShadows?: boolean;
 }
 
 export function PostCarousel({
@@ -73,7 +74,8 @@ export function PostCarousel({
   onLoadMore,
   hasMore: propHasMore,
   isLoading: propIsLoading,
-  showSortOptions = true
+  showSortOptions = true,
+  disableScrollShadows = false
 }: PostCarouselProps) {
   const [posts, setPosts] = useState<Post[]>(initialPosts || []);
   const [loading, setLoading] = useState(propIsLoading || false);
@@ -323,13 +325,13 @@ export function PostCarousel({
               </DropdownMenu>
             </div>
 
-            <ScrollShadow>
-              <div className="flex gap-2 pb-2">
+            {disableScrollShadows ? (
+              <div className="flex gap-2 pb-2 overflow-x-auto">
                 {availableTags.map(tag => (
                   <Badge
                     key={tag}
                     variant={selectedTags.includes(tag) ? "default" : "outline"}
-                    className="cursor-pointer"
+                    className="cursor-pointer flex-shrink-0"
                     onClick={() => toggleTag(tag)}
                   >
                     {tag}
@@ -339,93 +341,195 @@ export function PostCarousel({
                   </Badge>
                 ))}
               </div>
-            </ScrollShadow>
+            ) : (
+              <ScrollShadow>
+                <div className="flex gap-2 pb-2">
+                  {availableTags.map(tag => (
+                    <Badge
+                      key={tag}
+                      variant={selectedTags.includes(tag) ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => toggleTag(tag)}
+                    >
+                      {tag}
+                      {selectedTags.includes(tag) && (
+                        <X className="ml-1 h-3 w-3" />
+                      )}
+                    </Badge>
+                  ))}
+                </div>
+              </ScrollShadow>
+            )}
           </div>
         )}
 
         {/* Posts Stack */}
-        <div className="flex-1 min-h-0">
-          <ScrollShadow className="h-full px-4">
-            <div className="space-y-4 pb-4">
-              {posts.map((post, index) => (
-                <Card
-                  key={post.id}
-                  ref={index === posts.length - 1 ? lastPostRef : null}
-                  className="bg-card/50 backdrop-blur cursor-pointer hover:bg-card/60 transition-colors"
-                  onClick={() => handlePostClick(post)}
-                >
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <div>
-                      <h3 className="text-lg font-semibold line-clamp-1">{post.title}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(post.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      {post.tags.map(tag => (
-                        <Badge
-                          key={tag}
-                          variant="secondary"
-                          className="cursor-pointer"
+        <div className="flex-1 min-h-0 overflow-hidden">
+          {disableScrollShadows ? (
+            <div className="h-full px-4 overflow-y-auto">
+              <div className="space-y-4 pb-4">
+                {posts.map((post, index) => (
+                  <Card
+                    key={post.id}
+                    ref={index === posts.length - 1 ? lastPostRef : null}
+                    className="bg-card/50 backdrop-blur cursor-pointer hover:bg-card/60 transition-colors"
+                    onClick={() => handlePostClick(post)}
+                  >
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <div>
+                        <h3 className="text-lg font-semibold line-clamp-1">{post.title}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(post.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        {post.tags.map(tag => (
+                          <Badge
+                            key={tag}
+                            variant="secondary"
+                            className="cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleTag(tag);
+                            }}
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="mb-4 line-clamp-2">{post.content}</p>
+                      {post.mediaUrl && (
+                        <div className="mb-4">
+                          {post.mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                            <ImagePreview
+                              src={post.mediaUrl}
+                              alt={post.title}
+                              previewClassName="max-h-[40vh]"
+                            />
+                          ) : post.mediaUrl.match(/\.(mp3|wav|m4a|ogg|aac|webm)$/i) ? (
+                            <audio
+                              src={post.mediaUrl}
+                              controls
+                              className="w-full"
+                              preload="metadata"
+                            />
+                          ) : null}
+                        </div>
+                      )}
+                      <div className="flex items-center gap-4">
+                        <Button
+                          variant={post.liked ? "default" : "ghost"}
+                          size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            toggleTag(tag);
+                            handlePostLike(post.id);
                           }}
+                          className={`flex items-center gap-1 ${post.liked ? 'bg-orange-500 hover:bg-orange-600' : ''}`}
                         >
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="mb-4 line-clamp-2">{post.content}</p>
-                    {post.mediaUrl && (
-                      <div className="mb-4">
-                        {post.mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                          <ImagePreview
-                            src={post.mediaUrl}
-                            alt={post.title}
-                            previewClassName="max-h-[40vh]"
-                          />
-                        ) : post.mediaUrl.match(/\.(mp3|wav|m4a|ogg|aac|webm)$/i) ? (
-                          <audio
-                            src={post.mediaUrl}
-                            controls
-                            className="w-full"
-                            preload="metadata"
-                          />
-                        ) : null}
+                          <Flame className={`h-4 w-4 ${post.liked ? "fill-current" : ""}`} />
+                          <span>{post.likesCount}</span>
+                        </Button>
+                        <CommentDialog
+                          postId={post.id}
+                          commentsCount={post.commentsCount}
+                          onCommentAdded={() => handleCommentAdded(post.id)}
+                        />
                       </div>
-                    )}
-                    <div className="flex items-center gap-4">
-                      <Button
-                        variant={post.liked ? "default" : "ghost"}
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePostLike(post.id);
-                        }}
-                        className={`flex items-center gap-1 ${post.liked ? 'bg-orange-500 hover:bg-orange-600' : ''}`}
-                      >
-                        <Flame className={`h-4 w-4 ${post.liked ? "fill-current" : ""}`} />
-                        <span>{post.likesCount}</span>
-                      </Button>
-                      <CommentDialog
-                        postId={post.id}
-                        commentsCount={post.commentsCount}
-                        onCommentAdded={() => handleCommentAdded(post.id)}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {loading && (
-                <div className="flex justify-center py-4">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                </div>
-              )}
+                    </CardContent>
+                  </Card>
+                ))}
+                {loading && (
+                  <div className="flex justify-center py-4">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                  </div>
+                )}
+              </div>
             </div>
-          </ScrollShadow>
+          ) : (
+            <ScrollShadow className="h-full px-4">
+              <div className="space-y-4 pb-4">
+                {posts.map((post, index) => (
+                  <Card
+                    key={post.id}
+                    ref={index === posts.length - 1 ? lastPostRef : null}
+                    className="bg-card/50 backdrop-blur cursor-pointer hover:bg-card/60 transition-colors"
+                    onClick={() => handlePostClick(post)}
+                  >
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <div>
+                        <h3 className="text-lg font-semibold line-clamp-1">{post.title}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(post.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        {post.tags.map(tag => (
+                          <Badge
+                            key={tag}
+                            variant="secondary"
+                            className="cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleTag(tag);
+                            }}
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="mb-4 line-clamp-2">{post.content}</p>
+                      {post.mediaUrl && (
+                        <div className="mb-4">
+                          {post.mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                            <ImagePreview
+                              src={post.mediaUrl}
+                              alt={post.title}
+                              previewClassName="max-h-[40vh]"
+                            />
+                          ) : post.mediaUrl.match(/\.(mp3|wav|m4a|ogg|aac|webm)$/i) ? (
+                            <audio
+                              src={post.mediaUrl}
+                              controls
+                              className="w-full"
+                              preload="metadata"
+                            />
+                          ) : null}
+                        </div>
+                      )}
+                      <div className="flex items-center gap-4">
+                        <Button
+                          variant={post.liked ? "default" : "ghost"}
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePostLike(post.id);
+                          }}
+                          className={`flex items-center gap-1 ${post.liked ? 'bg-orange-500 hover:bg-orange-600' : ''}`}
+                        >
+                          <Flame className={`h-4 w-4 ${post.liked ? "fill-current" : ""}`} />
+                          <span>{post.likesCount}</span>
+                        </Button>
+                        <CommentDialog
+                          postId={post.id}
+                          commentsCount={post.commentsCount}
+                          onCommentAdded={() => handleCommentAdded(post.id)}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                {loading && (
+                  <div className="flex justify-center py-4">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                  </div>
+                )}
+              </div>
+            </ScrollShadow>
+          )}
         </div>
         {/* Post Detail Modal */}
         {selectedPost && (
