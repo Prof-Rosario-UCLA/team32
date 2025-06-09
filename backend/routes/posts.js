@@ -708,6 +708,100 @@ router.post('/:id/comments', verifyToken, async (req, res) => {
   }
 });
 
+// Get posts by user ID
+router.get('/user/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    // Generate cache key
+    const cacheKey = generateCacheKey('user-posts', {
+      userId,
+      page,
+      limit,
+      authUserId: req.user?.id || null
+    });
+
+    // Try to get from cache first
+    const cachedResult = await client.get(cacheKey);
+    if (cachedResult) {
+      console.log("User posts fetched from cache");
+      return res.json(JSON.parse(cachedResult));
+    }
+
+    // Get posts with author info and like status for authenticated users
+    const posts = await prisma.post.findMany({
+      where: {
+        authorId: parseInt(userId),
+        isPublished: true
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            email: true
+          }
+        },
+        likes: req.user ? {
+          where: {
+            userId: req.user.id
+          },
+          select: {
+            id: true
+          }
+        } : false,
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      skip,
+      take,
+    });
+
+    // Transform posts to include liked status
+    const transformedPosts = posts.map(post => ({
+      ...post,
+      liked: post.likes?.length > 0,
+      likes: undefined // Remove the likes array from response
+    }));
+
+    // Get total count for pagination
+    const total = await prisma.post.count({
+      where: {
+        authorId: parseInt(userId),
+        isPublished: true
+      }
+    });
+
+    const result = {
+      posts: transformedPosts,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / parseInt(limit))
+      }
+    };
+
+    // Cache the result
+    await client.set(cacheKey, JSON.stringify(result), 'EX', CACHE_TTL.POSTS);
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching user posts:', error);
+    res.status(500).json({ message: 'Error fetching user posts' });
+  }
+});
+
 // Error handling middleware
 router.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
