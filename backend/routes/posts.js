@@ -194,7 +194,7 @@ router.post('/upload-voice', verifyToken, async (req, res) => {
     });
 
     await r2Client.send(uploadCommand);
-    const fileUrl = `https://pub-${process.env.R2_ACCOUNT_ID}.r2.dev/${fileName}`;
+    const fileUrl = `${process.env.R2_ENDPOINT}/${fileName}`;
 
     res.json({
       success: true,
