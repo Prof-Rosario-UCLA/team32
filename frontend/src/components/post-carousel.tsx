@@ -89,7 +89,12 @@ export function PostCarousel({
   // Update posts when initialPosts changes
   useEffect(() => {
     if (initialPosts) {
-      setPosts(initialPosts);
+      // Ensure each post has the liked property from the backend
+      const postsWithLikeState = initialPosts.map(post => ({
+        ...post,
+        liked: Boolean(post.liked) // Explicitly convert to boolean to ensure proper type
+      }));
+      setPosts(postsWithLikeState);
     }
   }, [initialPosts]);
 
@@ -142,17 +147,25 @@ export function PostCarousel({
         throw new Error('Failed to like post');
       }
 
+      const updatedPost = await response.json();
+
+      // Update posts with the exact data from the backend
       setPosts(prev => prev.map(p =>
         p.id === postId
-          ? { ...p, liked: !p.liked, likesCount: p.liked ? p.likesCount - 1 : p.likesCount + 1 }
+          ? {
+            ...p,
+            liked: updatedPost.liked,
+            likesCount: updatedPost.likesCount
+          }
           : p
       ));
 
+      // Update selected post if it's the one being liked
       if (selectedPost?.id === postId) {
         setSelectedPost(prev => prev ? {
           ...prev,
-          liked: !prev.liked,
-          likesCount: prev.liked ? prev.likesCount - 1 : prev.likesCount + 1
+          liked: updatedPost.liked,
+          likesCount: updatedPost.likesCount
         } : null);
       }
     } catch (error) {
@@ -194,10 +207,16 @@ export function PostCarousel({
       if (!response.ok) throw new Error('Failed to fetch posts');
       const data = await response.json();
 
+      // Ensure each post has the liked property from the backend
+      const postsWithLikeState = data.posts.map((post: Post) => ({
+        ...post,
+        liked: post.liked ?? false // Use the liked state from backend, default to false if not present
+      }));
+
       if (isNewSearch) {
-        setPosts(data.posts);
+        setPosts(postsWithLikeState);
       } else {
-        setPosts(prev => [...prev, ...data.posts]);
+        setPosts(prev => [...prev, ...postsWithLikeState]);
       }
 
       setHasMore(data.posts.length === 10);
@@ -270,7 +289,14 @@ export function PostCarousel({
       });
       if (!response.ok) throw new Error('Failed to fetch posts');
       const data = await response.json();
-      setPosts(data.posts || []);
+
+      // Ensure each post has the liked property from the backend
+      const postsWithLikeState = data.posts.map((post: Post) => ({
+        ...post,
+        liked: post.liked ?? false // Use the liked state from backend, default to false if not present
+      }));
+
+      setPosts(postsWithLikeState);
       setPage(1);
       setHasMore(true);
     } catch (error) {
@@ -439,4 +465,4 @@ export function PostCarousel({
       </div>
     </div>
   );
-} 
+}
