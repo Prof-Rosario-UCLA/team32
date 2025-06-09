@@ -1,13 +1,11 @@
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/auth-context";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Mail, Calendar, Flame, MessageSquare } from "lucide-react";
+import { LogOut, User, Mail, Flame, MessageSquare } from "lucide-react";
 import { useState, useEffect } from "react";
 import { PostCarousel } from "@/components/post-carousel";
 import { Post } from "@/types/post";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollShadow } from "@/components/ui/scroll-shadow";
-import { Badge } from "@/components/ui/badge";
 
 interface ProfileModalProps {
   isOpen: boolean;
