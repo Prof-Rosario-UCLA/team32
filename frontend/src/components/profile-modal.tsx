@@ -149,7 +149,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 Your Posts
               </h3>
             </div>
-            <div className="flex-1 min-h-0 overflow-hidden">
+            <div className="flex-1 min-h-0 overflow-hidden pt-4">
               <PostCarousel
                 initialPosts={posts}
                 onLoadMore={handleLoadMore}
