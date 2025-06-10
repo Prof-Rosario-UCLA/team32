@@ -125,8 +125,4 @@ jobs:
           kubectl rollout restart deployment frontend -n ucla-forum
           kubectl rollout status deployment/frontend -n ucla-forum
 
-          # Clean up old ReplicaSets (keeps only latest)
-          kubectl delete replicaset -l app=backend -n ucla-forum --field-selector=status.replicas=0
-          kubectl delete replicaset -l app=frontend -n ucla-forum --field-selector=status.replicas=0
-
           kubectl get services -o wide -n ucla-forum
