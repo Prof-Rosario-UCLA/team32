@@ -24,6 +24,7 @@ import { CreatePostModal } from '../../components/modals/create-post-modal';
 import { NewPostNotification } from '../../components/notifications/new-post-notification';
 import { WebSocketMessage } from '../../types/websocket';
 import {SORT_OPTIONS} from '../../lib/const';
+import { withStopEvent } from '../../utils/stop-event';
 
 export function PostCarousel({
   initialPosts,
@@ -370,7 +371,6 @@ export function PostCarousel({
 
   const handlePostCreated = (newPost: Post) => {
     setPosts(prevPosts => {
-      // Check if post already exists
       if (prevPosts.some(existingPost => existingPost.id === newPost.id)) {
         return prevPosts;
       }
@@ -478,7 +478,7 @@ export function PostCarousel({
                     key={post.id}
                     ref={index === posts.length - 1 ? lastPostRef : null}
                     className="bg-card/50 backdrop-blur cursor-pointer hover:bg-card/60 transition-colors"
-                    onClick={() => handlePostClick(post)}
+                    onClick={withStopEvent(() => handlePostClick(post))}
                   >
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <div>

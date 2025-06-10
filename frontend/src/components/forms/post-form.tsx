@@ -357,8 +357,10 @@ export function PostForm({ onSuccess, onPostCreated, className }: PostFormProps)
   
       toast.success('Post created successfully!');
       if (onPostCreated) {
+        console.log('Post created:' + data);
         onPostCreated(data);
       }
+      console.log("What the balls?");
       if (onSuccess) {
         onSuccess();
       } else {
