@@ -143,6 +143,36 @@ async function invalidatePostCaches() {
   await client.del('tags:all');
 }
 
+// Helper function to update cache with new post
+async function updateCacheWithNewPost(post) {
+  try {
+    // Get all post list cache keys
+    const keys = await client.keys('posts:*');
+    
+    for (const key of keys) {
+      const cachedData = await client.get(key);
+      if (cachedData) {
+        const data = JSON.parse(cachedData);
+        
+        // Add the new post to the beginning of the list
+        data.posts = [post, ...data.posts];
+        
+        // Update pagination
+        if (data.pagination) {
+          data.pagination.total += 1;
+          data.pagination.totalPages = Math.ceil(data.pagination.total / data.pagination.limit);
+        }
+
+        // Update the cache with the new data
+        await client.set(key, JSON.stringify(data), 'EX', CACHE_TTL.POSTS);
+        console.log('Updated cache with new post:', key);
+      }
+    }
+  } catch (error) {
+    console.error('Error updating cache with new post:', error);
+  }
+}
+
 // Upload file endpoint (separate from post creation)
 router.post('/media', verifyToken, upload.single('file'), async (req, res) => {
   try {
@@ -407,16 +437,23 @@ router.post('/', verifyToken, async (req, res) => {
       }
     });
 
-    // Invalidate relevant caches
-    await invalidatePostCaches();
+    // Transform post to match the format in cache
+    const transformedPost = {
+      ...post,
+      liked: false,
+      likes: undefined // Remove the likes array
+    };
+
+    // Update cache with new post
+    await updateCacheWithNewPost(transformedPost);
 
     // Emit new post event via WebSocket
     const wss = getWebSocket();
     if (wss) {
-      wss.broadcast('new_post', { ...post, liked: false });
+      wss.broadcast('new_post', transformedPost);
     }
 
-    res.status(201).json({ ...post, liked: false });
+    res.status(201).json(transformedPost);
   } catch (error) {
     console.error('Error creating post:', error);
     res.status(500).json({
@@ -475,16 +512,23 @@ router.post('/with-upload', verifyToken, upload.single('file'), async (req, res)
       }
     });
 
-    // Invalidate relevant caches
-    await invalidatePostCaches();
+    // Transform post to match the format in cache
+    const transformedPost = {
+      ...post,
+      liked: false,
+      likes: undefined // Remove the likes array
+    };
+
+    // Update cache with new post
+    await updateCacheWithNewPost(transformedPost);
 
     // Emit new post event via WebSocket
     const wss = getWebSocket();
     if (wss) {
-      wss.broadcast('new_post', { ...post, liked: false });
+      wss.broadcast('new_post', transformedPost);
     }
 
-    res.status(201).json({ ...post, liked: false });
+    res.status(201).json(transformedPost);
   } catch (error) {
     console.error('Error creating post with upload:', error);
     res.status(500).json({
