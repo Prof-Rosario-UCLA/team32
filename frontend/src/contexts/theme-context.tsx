@@ -15,13 +15,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('light');
 
   useEffect(() => {
-    // Check if user has a theme preference in localStorage
+    // 1. theme preference in localStorage
     const savedTheme = localStorage.getItem('theme') as Theme;
     if (savedTheme) {
       setTheme(savedTheme);
       document.documentElement.classList.toggle('dark', savedTheme === 'dark');
     } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      // Check system preference
+      // 2. system preference
       setTheme('dark');
       document.documentElement.classList.add('dark');
     }

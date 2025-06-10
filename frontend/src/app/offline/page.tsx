@@ -1,9 +1,9 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/../components/ui/button"
 import { WifiOff } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { CachedPosts } from "@/components/cached-posts"
+import { CachedPosts } from "@/../components/offline/cached-posts"
 
 export default function OfflinePage() {
   const router = useRouter()

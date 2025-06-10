@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/contexts/auth-context";
-import { ThemeProvider } from "@/contexts/theme-context";
+import { AuthProvider } from "@/../contexts/auth-context";
+import { ThemeProvider } from "@/../contexts/theme-context";
 import { Toaster } from 'sonner';
-import { NetworkStatus } from "@/components/network-status";
-import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
+import { NetworkStatus } from "@/../components/notifications/network-status";
+import { ServiceWorkerRegistration } from "@/../components/functions/service-worker-registration";
 
 const inter = Inter({ subsets: ["latin"] });
 

@@ -1,19 +1,27 @@
 'use client';
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/../components/ui/button";
 import { ArrowRight, Flame, Zap } from "lucide-react";
-import { useAuth } from "@/contexts/auth-context";
-import { NavBar } from "@/components/nav-bar";
-import { PostCarousel } from "@/components/post-carousel";
+import { useAuth } from "@/../contexts/auth-context";
+import { NavBar } from "@/../components/nav/nav-bar";
+import { PostCarousel } from "@/../components/posts/post-carousel";
 import { useState } from "react";
-import { AuthModals } from "@/components/auth-modals";
+import { AuthModals } from "@/../components/modals/auth-modals";
 import { motion } from "framer-motion";
-import { TrendingTopics } from "@/components/trending-topics";
+import { TrendingTopics } from "@/../components/posts/trending-topics";
+import useEmblaCarousel from "embla-carousel-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function Home() {
   const { user, loading } = useAuth();
   const [showSignup, setShowSignup] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: true,
+    dragFree: true,
+    containScroll: "trimSnaps",
+    align: "start"
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-orange-950/5">
@@ -31,11 +39,11 @@ export default function Home() {
             </div>
           ) : (
             <div className="grid w-full gap-8 md:grid-cols-2">
-              {/* Left Column - Hero */}
-              <div className="flex flex-col justify-center space-y-6">
-                <div className="relative">
+              {/* hero */}
+              <div className="flex flex-col justify-center items-center text-center space-y-6 pt-8 md:pt-0 md:items-start md:text-left">
+                <div className="relative w-full md:max-w-lg lg:max-w-xl">
                   <motion.div
-                    className="absolute -left-4 -top-4"
+                    className="absolute left-9 -top-4 sm:-left-4 md:-top-4"
                     animate={{
                       scale: [1, 1.2, 1],
                       rotate: [-5, 5, -5],
@@ -85,7 +93,7 @@ export default function Home() {
                     Join the conversation with fellow Bruins. Share your thoughts on campus life, academics, and more.
                   </p>
                 </div>
-                <div className="flex gap-4">
+                <div className="flex gap-4 md:justify-start justify-center">
                   <Button
                     size="lg"
                     onClick={() => setShowSignup(true)}
@@ -103,13 +111,77 @@ export default function Home() {
                   </Button>
                 </div>
 
-                {/* Trending Topics Section */}
-                <TrendingTopics />
+                {/* mobile carousel */}
+                <div className="md:hidden relative px-4 w-full">
+                  <div className="overflow-hidden" ref={emblaRef}>
+                    <div className="flex">
+                      {/* topics slide */}
+                      <div className="flex-[0_0_100%] min-w-0 pb-8">
+                        <div className="backdrop-blur-sm rounded-lg p-4">
+                          <TrendingTopics />
+                        </div>
+                      </div>
+                      {/* feature cards slide */}
+                      <div className="flex-[0_0_100%] min-w-0 flex items-center justify-center">
+                        <div className="space-y-4 mt-0 backdrop-blur-sm rounded-lg p-4">
+                          <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            className="rounded-lg border backdrop-blur-sm p-6 shadow-lg shadow-orange-500/5 hover:shadow-orange-500/10 transition-all duration-300"
+                          >
+                            <div className="mb-2 flex items-center">
+                              <Flame className="mr-2 h-5 w-5 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.3)]" />
+                              <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">Real-time Updates</h3>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              Stay connected with the latest campus discussions and trending topics.
+                            </p>
+                          </motion.div>
+                          <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            className="rounded-lg border backdrop-blur-sm p-6 shadow-lg shadow-orange-500/5 hover:shadow-orange-500/10 transition-all duration-300"
+                          >
+                            <div className="mb-2 flex items-center">
+                              <Zap className="mr-2 h-5 w-5 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.3)]" />
+                              <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">Engage & Connect</h3>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              Like, comment, and interact with posts from your fellow Bruins.
+                            </p>
+                          </motion.div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* nav buttons */}
+                  <div className="absolute -bottom-12 left-0 right-0 flex justify-center gap-4">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => emblaApi?.scrollPrev()}
+                      className="rounded-full"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => emblaApi?.scrollNext()}
+                      className="rounded-full"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* desktop trending topics */}
+                <div className="hidden md:block w-full" >
+                  <TrendingTopics />
+                </div>
               </div>
 
-              {/* Right Column - Feature Cards */}
-              <div className="flex items-center justify-center">
-                <div className="w-full max-w-md space-y-4">
+              {/* feature cards ~ desktop */}
+              <div className="hidden md:flex items-center justify-center pt-8 md:pt-0">
+                <div className="w-full max-w-md md:max-w-lg space-y-4">
                   <motion.div
                     whileHover={{ scale: 1.02 }}
                     className="rounded-lg border bg-card/50 backdrop-blur-sm p-6 shadow-lg shadow-orange-500/5 hover:shadow-orange-500/10 transition-all duration-300"
@@ -119,7 +191,7 @@ export default function Home() {
                       <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">Real-time Updates</h3>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Stay connected with the latest campus discussions and trending topics.
+                      Stay in the loop on campus discussions and trending topics.
                     </p>
                   </motion.div>
                   <motion.div
