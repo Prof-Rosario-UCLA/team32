@@ -6,8 +6,7 @@ export function ServiceWorkerRegistration() {
   useEffect(() => {
     if (
       typeof window !== 'undefined' && 
-      'serviceWorker' in navigator && 
-      process.env.NODE_ENV === 'production' // Only in production
+      'serviceWorker' in navigator
     ) {
       console.log('Attempting to register service worker...');
       
