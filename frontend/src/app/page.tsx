@@ -24,10 +24,10 @@ export default function Home() {
   });
 
   return (
-<div className="h-screen bg-gradient-to-b from-background via-background to-orange-950/5 overflow-y-hidden">      
+<div className="h-[100svh] bg-gradient-to-b from-background via-background to-orange-950/5 overflow-y-hidden">      
 <NavBar />
-      <main className="container mx-auto flex h-[calc(100vh-4rem)] flex-col px-2 sm:px-4">
-        <div className="flex flex-1 items-center">
+      <main className="container mx-auto flex h-[calc(100svh-3rem)] flex-col px-2 sm:px-4">
+        <div className="flex flex-1 items-center justify-center">
           {loading ? (
             <div className="w-full animate-pulse space-y-4">
               <div className="h-8 w-3/4 rounded bg-muted" />
@@ -54,7 +54,7 @@ export default function Home() {
                       ease: "easeInOut",
                     }}
                   >
-                    <Flame className="h-6 w-6 sm:h-8 sm:w-8 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
+                    <Flame className="hidden md:block text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
                   </motion.div>
                   <h2 className="mb-3 sm:mb-4 text-2xl sm:text-3xl xs:text-4xl font-bold tracking-tight text-foreground md:text-4xl lg:text-5xl">
                     Share Your{" "}

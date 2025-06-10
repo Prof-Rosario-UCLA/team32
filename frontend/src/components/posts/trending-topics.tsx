@@ -54,7 +54,7 @@ export function TrendingTopics() {
 
     return (
         <div className="mt-8 space-y-4">
-            <h3 className="flex items-center text-xl font-semibold">
+            <h3 className="flex items-center text-xl font-semibold justify-center md:justify-start">
                 <TrendingUp className="mr-2 h-5 w-5 text-orange-500" />
                 Trending Hot Takes
             </h3>
