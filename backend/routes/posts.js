@@ -78,15 +78,14 @@ const upload = multer({
   }
 });
 
-// Generate unique filename
+
 function generateFileName(originalName) {
   const timestamp = Date.now();
   const randomString = crypto.randomBytes(6).toString('hex');
   const extension = path.extname(originalName);
-  return `posts/${timestamp}-${randomString}${extension}`;
+  return `/posts/${timestamp}-${randomString}${extension}`;
 }
 
-// Upload file to R2
 async function uploadToR2(file) {
   const fileName = generateFileName(file.originalname);
   
@@ -102,8 +101,7 @@ async function uploadToR2(file) {
   });
 
   await r2Client.send(uploadCommand);
-  
-  // Return public URL for your bucket
+   
   return `${process.env.R2_PUBLIC_DEV_URL}/${fileName}`;
 }
 
