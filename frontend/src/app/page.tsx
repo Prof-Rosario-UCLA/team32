@@ -24,9 +24,9 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-orange-950/5">
-      <NavBar />
-      <main className="container mx-auto flex h-[calc(100svh-4rem)] flex-col px-2 sm:px-4">
+<div className="h-screen bg-gradient-to-b from-background via-background to-orange-950/5 overflow-y-hidden">      
+<NavBar />
+      <main className="container mx-auto flex h-[calc(100vh-4rem)] flex-col px-2 sm:px-4">
         <div className="flex flex-1 items-center">
           {loading ? (
             <div className="w-full animate-pulse space-y-4">
