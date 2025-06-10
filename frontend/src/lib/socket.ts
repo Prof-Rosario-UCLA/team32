@@ -1,5 +1,5 @@
 import { API_URL } from '../config/api';
-import type { Post } from '../../types/post';
+import type { Post } from '../types/post';
 
 export type MessageType = 
   | 'new_post'

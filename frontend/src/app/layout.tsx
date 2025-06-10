@@ -4,8 +4,8 @@ import "./globals.css";
 import { AuthProvider } from "contexts/auth-context";
 import { ThemeProvider } from "contexts/theme-context";
 import { Toaster } from 'sonner';
-import { NetworkStatus } from "../../components/functions/network-status";
-import { ServiceWorkerRegistration } from "../../components/functions/service-worker-registration";
+import { NetworkStatus } from "../components/notifications/network-status";
+import { ServiceWorkerRegistration } from "../components/functions/service-worker-registration";
 
 const inter = Inter({ subsets: ["latin"] });
 
