@@ -1,18 +1,18 @@
 import { useState } from 'react';
-import { useAuth } from '@/../contexts/auth-context';
-import { Button } from '@/../components/ui/button';
+import { useAuth } from '../../contexts/auth-context';
+import { Button } from '../../components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/../components/ui/dialog';
-import { Textarea } from '@/../components/ui/textarea';
+} from '../../components/ui/dialog';
+import { Textarea } from '../../components/ui/textarea';
 import { toast } from 'sonner';
 import { MessageSquare, Send } from 'lucide-react';
-import { ScrollArea } from '@/../components/ui/scroll-area';
-import { API_URL } from '@/../config/api';
-import { CommentDialogProps, Comment } from '@/../types/comments';
+import { ScrollArea } from '../../components/ui/scroll-area';
+import { API_URL } from '../../config/api';
+import { CommentDialogProps, Comment } from '../../types/comments';
 
 export function CommentDialog({ postId, commentsCount, onCommentAdded }: CommentDialogProps) {
   const [open, setOpen] = useState(false);

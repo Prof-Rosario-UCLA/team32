@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogTitle } from "@/../components/ui/dialog";
-import { cn } from "@/../lib/utils";
-import { ImagePreviewProps } from "@/../types/media";
+import { Dialog, DialogContent, DialogTitle } from "../../components/ui/dialog";
+import { cn } from "../../lib/utils";
+import { ImagePreviewProps } from "../../types/media";
 import Image from "next/image";
 
 export function ImagePreview({ 

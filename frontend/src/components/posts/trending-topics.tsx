@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import { TrendingUp, Flame } from "lucide-react";
 import { motion } from "framer-motion";
-import { getSocket } from "@/../lib/socket";
-import { API_URL } from "@/../config/api";
-import { TrendingTopic } from "@/../types/post";
+import { getSocket } from "../../lib/socket";
+import { API_URL } from "../../config/api";
+import { TrendingTopic } from "../../types/post";
 
 export function TrendingTopics() {
     const [trendingTopics, setTrendingTopics] = useState<TrendingTopic[]>([]);

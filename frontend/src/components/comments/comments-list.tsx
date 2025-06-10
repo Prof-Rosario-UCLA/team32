@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from "sonner";
-import { API_URL } from '@/../config/api';
+import { API_URL } from '../../config/api';
 import {CommentsListProps, Comment} from "types/comments";
 
 export function CommentsList({ postId, newComment }: CommentsListProps) {

@@ -3,8 +3,8 @@
 
 import { useRef, MouseEvent, ChangeEvent, useEffect } from 'react';
 import { ImageIcon } from 'lucide-react';
-import { Button } from '@/../components/ui/button';
-import { MediaUploaderProps } from '@/../types/media';
+import { Button } from '../../components/ui/button';
+import { MediaUploaderProps } from '../../types/media';
 
 export function MediaUploader({ 
   onFileChange, 

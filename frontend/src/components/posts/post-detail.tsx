@@ -1,15 +1,15 @@
-import { Dialog, DialogContent, DialogTitle } from "@/../components/ui/dialog";
-import { Button } from "@/../components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "../../components/ui/dialog";
+import { Button } from "../../components/ui/button";
 import { Flame } from "lucide-react";
-import { Badge } from "@/../components/ui/badge";
-import { ScrollShadow } from "@/../components/ui/scroll-shadow"
-import { CommentDialog } from '@/../components/comments/comment-dialog';
-import { CommentsSection } from '@/../components/comments/comments-section';
-import { CommentsList } from '@/../components/comments/comments-list';
-import { ImagePreview } from "@/../components/media/image-preview";
+import { Badge } from "../../components/ui/badge";
+import { ScrollShadow } from "../../components/ui/scroll-shadow"
+import { CommentDialog } from '../../components/comments/comment-dialog';
+import { CommentsSection } from '../../components/comments/comments-section';
+import { CommentsList } from '../../components/comments/comments-list';
+import { ImagePreview } from "../../components/media/image-preview";
 import { useState } from 'react';
-import { PostDetailProps } from '@/../types/post';
-import { Comment } from '@/../types/comments';
+import { PostDetailProps } from '../../types/post';
+import { Comment } from '../../types/comments';
 
 export function PostDetail({ post, onClose, onLike, onCommentAdded }: PostDetailProps) {
   const [newComment, setNewComment] = useState<Comment | undefined>();

@@ -1,10 +1,10 @@
-import { cn } from "@/../lib/utils"
-import { Button } from "@/../components/ui/button"
-import { Input } from "@/../components/ui/input"
+import { cn } from "../../lib/utils"
+import { Button } from "../../components/ui/button"
+import { Input } from "../../components/ui/input"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { signupSchema } from "@/../lib/validations/signup-schema"
+import { signupSchema } from "../../lib/validations/signup-schema"
 import {
   Form,
   FormControl,
@@ -12,8 +12,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/../components/ui/form"
-import { type SignupFormProps } from "@/../types/forms"
+} from "../../components/ui/form"
+import { type SignupFormProps } from "../../types/forms"
 
 export function SignupForm({
   className,

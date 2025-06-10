@@ -1,9 +1,9 @@
-import { Dialog, DialogContent, DialogTitle } from "@/../components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "../../components/ui/dialog";
 import { LoginForm } from "../forms/login-form";
 import { SignupForm } from "../forms/signup-form";
-import { useAuth } from "@/../contexts/auth-context";
+import { useAuth } from "../../contexts/auth-context";
 import { toast } from "sonner";
-import {AuthModalsProps} from "@/../types/modals";
+import {AuthModalsProps} from "../../types/modals";
 
 export function AuthModals({ 
   isLoginOpen, 

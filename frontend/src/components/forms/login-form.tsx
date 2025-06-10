@@ -1,10 +1,10 @@
-import { cn } from "@/../lib/utils"
-import { Button } from "@/../components/ui/button"
-import { Input } from "@/../components/ui/input"
+import { cn } from "../../lib/utils"
+import { Button } from "../../components/ui/button"
+import { Input } from "../../components/ui/input"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { loginSchema } from "@/../lib/validations/login-schema"
+import { loginSchema } from "../../lib/validations/login-schema"
 import {
   Form,
   FormControl,
@@ -12,10 +12,10 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/../components/ui/form"
+} from "../../components/ui/form"
 import { useState } from "react"
 import { ForgotPasswordModal } from "../modals/forgot-password-modal"
-import { type LoginFormProps } from "@/../types/forms"
+import { type LoginFormProps } from "../../types/forms"
 
 export function LoginForm({
   className,

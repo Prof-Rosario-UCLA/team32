@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Button } from '@/../components/ui/button';
+import { Button } from '../../components/ui/button';
 import { Bell } from 'lucide-react';
-import { cn } from '@/../lib/utils';
-import { getSocket } from '@/../lib/socket';
+import { cn } from '../../lib/utils';
+import { getSocket } from '../../lib/socket';
 import type { Post } from '../../types/post';
 import { WebSocketMsg } from '../../types/websocket';
 import type { NewPostNotificationProps } from '../../types/websocket';

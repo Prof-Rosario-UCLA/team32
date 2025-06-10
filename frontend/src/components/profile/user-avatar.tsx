@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from "@/../components/ui/avatar";
-import { Button } from "@/../components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
+import { Button } from "../../components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,11 +10,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/../components/ui/dropdown-menu";
-import { useAuth } from "@/../contexts/auth-context";
+} from "../../components/ui/dropdown-menu";
+import { useAuth } from "../../contexts/auth-context";
 import { LogOut, User } from "lucide-react";
 import { ProfileModal } from "./profile-modal";
-import { UserAvatarProps } from '@/../types/modals';
+import { UserAvatarProps } from '../../types/modals';
 
 export function UserAvatar({ user }: UserAvatarProps) {
   const { logout } = useAuth();

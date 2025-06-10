@@ -1,13 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Card, CardContent, CardHeader } from "@/../components/ui/card"
-import { Badge } from "@/../components/ui/badge"
-import { Post } from "@/../types/post"
+import { Card, CardContent, CardHeader } from "../../components/ui/card"
+import { Badge } from "../../components/ui/badge"
+import { Post } from "../../types/post"
 import { ImagePreview } from "../media/image-preview"
-import { Button } from "@/../components/ui/button"
+import { Button } from "../../components/ui/button"
 import { Loader2, RefreshCw, WifiOff } from "lucide-react"
-import { ScrollShadow } from "@/../components/ui/scroll-shadow"
+import { ScrollShadow } from "../../components/ui/scroll-shadow"
 
 type LoadingState = 'loading' | 'timeout' | 'success' | 'error' | 'offline'
 

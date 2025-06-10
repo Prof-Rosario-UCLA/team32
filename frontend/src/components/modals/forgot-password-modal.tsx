@@ -1,12 +1,12 @@
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/../components/ui/dialog";
-import { Button } from "@/../components/ui/button";
-import { Input } from "@/../components/ui/input";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "../../components/ui/dialog";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
-import { API_URL } from '@/../config/api';
-import {type ForgotPasswordModalProps} from '@/../types/modals';
-import {emailSchema, codeSchema, passwordSchema} from '@/../lib/validations/forgot-pw-schema';
+import { API_URL } from '../../config/api';
+import {type ForgotPasswordModalProps} from '../../types/modals';
+import {emailSchema, codeSchema, passwordSchema} from '../../lib/validations/forgot-pw-schema';
 
 export function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProps) {
   const [step, setStep] = useState<"email" | "code" | "password" | "success">("email");

@@ -1,13 +1,13 @@
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/../components/ui/dialog";
-import { Button } from "@/../components/ui/button";
-import { Input } from "@/../components/ui/input";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "../../components/ui/dialog";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useEffect, useState } from "react";
-import { API_URL } from '@/../config/api';
-import { type ResetPasswordModalProps } from '@/../types/modals';
-import { resetPasswordSchema } from '@/../lib/validations/reset-pw-schema';
+import { API_URL } from '../../config/api';
+import { type ResetPasswordModalProps } from '../../types/modals';
+import { resetPasswordSchema } from '../../lib/validations/reset-pw-schema';
 
 export function ResetPasswordModal({ isOpen, onClose, token }: ResetPasswordModalProps) {
   const form = useForm<z.infer<typeof resetPasswordSchema>>({

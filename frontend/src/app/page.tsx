@@ -1,14 +1,14 @@
 'use client';
 
-import { Button } from "@/../components/ui/button";
+import { Button } from "../../components/ui/button";
 import { ArrowRight, Flame, Zap } from "lucide-react";
-import { useAuth } from "@/../contexts/auth-context";
-import { NavBar } from "@/../components/nav/nav-bar";
-import { PostCarousel } from "@/../components/posts/post-carousel";
+import { useAuth } from "../../contexts/auth-context";
+import { NavBar } from "../../components/nav/nav-bar";
+import { PostCarousel } from "../../components/posts/post-carousel";
 import { useState } from "react";
-import { AuthModals } from "@/../components/modals/auth-modals";
+import { AuthModals } from "../../components/modals/auth-modals";
 import { motion } from "framer-motion";
-import { TrendingTopics } from "@/../components/posts/trending-topics";
+import { TrendingTopics } from "../../components/posts/trending-topics";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 

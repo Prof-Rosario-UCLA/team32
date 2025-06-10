@@ -1,13 +1,13 @@
-import { Dialog, DialogContent, DialogTitle } from "@/../components/ui/dialog";
-import { useAuth } from "@/../contexts/auth-context";
-import { Button } from "@/../components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "../../components/ui/dialog";
+import { useAuth } from "../../contexts/auth-context";
+import { Button } from "../../components/ui/button";
 import { LogOut, User, Mail, Flame, MessageSquare } from "lucide-react";
 import { useState, useEffect } from "react";
-import { PostCarousel } from "@/../components/posts/post-carousel";
-import { Post } from "@/../types/post";
-import { Avatar, AvatarFallback, AvatarImage } from "@/../components/ui/avatar";
-import { API_URL } from "@/../config/api";
-import { ProfileModalProps } from "@/../types/modals";
+import { PostCarousel } from "../../components/posts/post-carousel";
+import { Post } from "../../types/post";
+import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
+import { API_URL } from "../../config/api";
+import { ProfileModalProps } from "../../types/modals";
 
 
 export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {

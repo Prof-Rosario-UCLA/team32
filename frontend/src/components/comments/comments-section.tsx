@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Button } from "@/../components/ui/button";
-import { Textarea } from "@/../components/ui/textarea";
+import { Button } from "../../components/ui/button";
+import { Textarea } from "../../components/ui/textarea";
 import { toast } from "sonner";
-import { useAuth } from "@/../contexts/auth-context";
-import { API_URL } from '@/../config/api';
+import { useAuth } from "../../contexts/auth-context";
+import { API_URL } from '../../config/api';
 import { type CommentsSectionProps } from "types/comments";
 
 export function CommentsSection({ postId, onCommentAdded }: CommentsSectionProps) {

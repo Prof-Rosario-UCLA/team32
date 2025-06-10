@@ -1,29 +1,29 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Card, CardContent, CardHeader } from "@/../components/ui/card";
-import { Button } from "@/../components/ui/button";
+import { Card, CardContent, CardHeader } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
 import { Flame, Search, ChevronDown, X } from "lucide-react";
-import { Input } from "@/../components/ui/input";
-import { Badge } from "@/../components/ui/badge";
-import { ScrollShadow } from '@/../components/ui/scroll-shadow';
+import { Input } from "../../components/ui/input";
+import { Badge } from "../../components/ui/badge";
+import { ScrollShadow } from '../../components/ui/scroll-shadow';
 import { toast } from "sonner";
-import { CommentDialog } from '@/../components/comments/comment-dialog';
-import { PostDetail } from '@/../components/posts/post-detail';
+import { CommentDialog } from '../../components/comments/comment-dialog';
+import { PostDetail } from '../../components/posts/post-detail';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/../components/ui/dropdown-menu";
-import { ImagePreview } from "@/../components/media/image-preview";
-import { initializeWebSocket, on, getSocket } from '@/../lib/socket';
-import { API_URL } from '@/../config/api';
+} from "../../components/ui/dropdown-menu";
+import { ImagePreview } from "../../components/media/image-preview";
+import { initializeWebSocket, on, getSocket } from '../../lib/socket';
+import { API_URL } from '../../config/api';
 import type { Post, SortOption, PostCarouselProps } from '../../types/post';
-import { CreatePostModal } from '@/../components/modals/create-post-modal';
-import { NewPostNotification } from '@/../components/notifications/new-post-notification';
+import { CreatePostModal } from '../../components/modals/create-post-modal';
+import { NewPostNotification } from '../../components/notifications/new-post-notification';
 import { WebSocketMessage } from '../../types/websocket';
-import {SORT_OPTIONS} from '@/../lib/const';
+import {SORT_OPTIONS} from '../../lib/const';
 
 export function PostCarousel({
   initialPosts,

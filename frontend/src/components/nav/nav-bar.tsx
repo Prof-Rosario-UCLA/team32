@@ -1,21 +1,21 @@
 'use client';
 
 import { useState } from "react";
-import { Button } from "@/../components/ui/button";
+import { Button } from "../../components/ui/button";
 import { ThemeToggle } from "components/functions/theme-toggle";
-import { UserAvatar } from "@/../components/profile/user-avatar";
-import { useAuth } from "@/../contexts/auth-context";
+import { UserAvatar } from "../../components/profile/user-avatar";
+import { useAuth } from "../../contexts/auth-context";
 import { Plus, Menu, Flame } from "lucide-react";
 import { AuthModals } from "components/modals/auth-modals";
 import { CreatePostModal } from "components/modals/create-post-modal";
-import { Avatar, AvatarImage } from "@/../components/ui/avatar";
+import { Avatar, AvatarImage } from "../../components/ui/avatar";
 import { motion } from "framer-motion";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/../components/ui/dropdown-menu";
+} from "../../components/ui/dropdown-menu";
 
 export function NavBar() {
   const { user, loading } = useAuth();

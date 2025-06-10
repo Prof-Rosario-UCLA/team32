@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { Button } from '@/../components/ui/button';
-import { Input } from '@/../components/ui/input';
-import { Textarea } from '@/../components/ui/textarea';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Textarea } from '../../components/ui/textarea';
 import {
   Form,
   FormControl,
@@ -15,20 +15,20 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/../components/ui/form';
+} from '../../components/ui/form';
 import { X, Image as ImageIcon, Mic, Square, Camera } from 'lucide-react';
-import { Badge } from '@/../components/ui/badge';
-import { cn } from "@/../lib/utils"
+import { Badge } from '../../components/ui/badge';
+import { cn } from "../../lib/utils"
 import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/../components/ui/dialog";
-import { API_URL } from '@/../config/api';
-import { type PostFormProps } from '@/../types/forms';
-import {formSchema} from '@/../lib/validations/post-schema';
+} from "../../components/ui/dialog";
+import { API_URL } from '../../config/api';
+import { type PostFormProps } from '../../types/forms';
+import {formSchema} from '../../lib/validations/post-schema';
 import Image from 'next/image';
 
 const MAX_TAGS = 5;
