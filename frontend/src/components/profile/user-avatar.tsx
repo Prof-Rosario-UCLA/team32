@@ -15,6 +15,7 @@ import { useAuth } from "../../contexts/auth-context";
 import { LogOut, User } from "lucide-react";
 import { ProfileModal } from "./profile-modal";
 import { UserAvatarProps } from '../../types/modals';
+import {withStopEvent } from '../../utils/stop-event';
 
 export function UserAvatar({ user }: UserAvatarProps) {
   const { logout } = useAuth();
@@ -26,6 +27,8 @@ export function UserAvatar({ user }: UserAvatarProps) {
         .join("")
         .toUpperCase()
     : user.email[0].toUpperCase();
+
+
 
   return (
     <>
@@ -49,14 +52,14 @@ export function UserAvatar({ user }: UserAvatarProps) {
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className="flex cursor-pointer items-center"
-            onClick={() => setIsProfileOpen(true)}
+            onClick={withStopEvent(() => setIsProfileOpen(true))}
           >
             <User className="mr-2 h-4 w-4" />
             <span>Profile</span>
           </DropdownMenuItem>
           <DropdownMenuItem
             className="flex cursor-pointer items-center text-red-600 focus:text-red-600"
-            onClick={() => logout()}
+            onClick={withStopEvent(() => logout())}
           >
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>
