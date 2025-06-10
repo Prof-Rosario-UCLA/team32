@@ -36,6 +36,11 @@ RUN npm install --production
 # Copy built application
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/next.config.* ./
+COPY --from=builder /app/tsconfig.json ./
+COPY --from=builder /app/tailwind.config.* ./
+COPY --from=builder /app/postcss.config.* ./
 
 # Set production environment and runtime environment variables
 ENV NODE_ENV=production
