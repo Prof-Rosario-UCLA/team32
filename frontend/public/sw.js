@@ -14,16 +14,31 @@ const API_ORIGINS = [
 ];
 
 // Track network state
-let isOnline = true;
+let isOnline = navigator.onLine;
+
+// Log initial state
+console.log('[SW] Initial network state:', isOnline ? 'online' : 'offline');
 
 self.addEventListener('online', () => {
   console.log('[SW] Network is online');
   isOnline = true;
+  // Notify clients about online status
+  self.clients.matchAll().then(clients => {
+    clients.forEach(client => {
+      client.postMessage({ type: 'ONLINE_STATUS', isOnline: true });
+    });
+  });
 });
 
 self.addEventListener('offline', () => {
   console.log('[SW] Network is offline');
   isOnline = false;
+  // Notify clients about offline status
+  self.clients.matchAll().then(clients => {
+    clients.forEach(client => {
+      client.postMessage({ type: 'ONLINE_STATUS', isOnline: false });
+    });
+  });
 });
 
 self.addEventListener('install', event => {
@@ -202,6 +217,10 @@ async function handleApiRequest(request, url) {
 
 async function handleNavigationRequest(request) {
   try {
+    // Double check network state
+    isOnline = navigator.onLine;
+    console.log('[SW] Handling navigation request, network state:', isOnline ? 'online' : 'offline');
+
     // Check network state first
     if (!isOnline) {
       console.log('[SW] Offline, serving offline page');
@@ -209,16 +228,18 @@ async function handleNavigationRequest(request) {
       if (offlinePage) {
         return offlinePage;
       }
-      return new Response(
-        '<html><body><h1>You are offline</h1><p>Please check your internet connection and try again.</p></body></html>',
-        {
-          status: 503,
-          headers: { 'Content-Type': 'text/html' }
-        }
-      );
+      // Fallback to network request for offline page
+      const response = await fetch('/offline');
+      if (response.ok) {
+        const cache = await caches.open(CACHE_NAME);
+        await cache.put('/offline', response.clone());
+        return response;
+      }
+      throw new Error('Failed to load offline page');
     }
 
     // If online, try network request
+    console.log('[SW] Online, attempting network request');
     const response = await fetch(request);
     if (!response.ok) {
       throw new Error('Network response was not ok');
@@ -230,14 +251,14 @@ async function handleNavigationRequest(request) {
     if (offlinePage) {
       return offlinePage;
     }
-
-    return new Response(
-      '<html><body><h1>You are offline</h1><p>Please check your internet connection and try again.</p></body></html>',
-      {
-        status: 503,
-        headers: { 'Content-Type': 'text/html' }
-      }
-    );
+    // Fallback to network request for offline page
+    const response = await fetch('/offline');
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put('/offline', response.clone());
+      return response;
+    }
+    throw error;
   }
 }
 

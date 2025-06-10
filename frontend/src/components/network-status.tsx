@@ -12,11 +12,14 @@ export function NetworkStatus() {
       setIsOffline(false)
       setShowOnline(true)
       setTimeout(() => setShowOnline(false), 3000)
+      window.location.reload()
     }
 
     const handleOffline = () => {
       setIsOffline(true)
       setShowOnline(false)
+      setTimeout(() => {setShowOnline(false)}, 3000)
+      window.location.reload()
     }
 
     // Add event listeners
