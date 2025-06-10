@@ -70,7 +70,7 @@ const nextConfig = {
     ];
   },
   images: {
-    domains: ['localhost'],
+    domains: ['localhost', 'pub-bcf1c007022c4efb921568837ba2d575.r2.dev', 'bruinhottake.brandonle.dev'],
     formats: ['image/avif', 'image/webp'],
   },
   experimental: {

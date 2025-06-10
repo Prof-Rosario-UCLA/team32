@@ -533,6 +533,8 @@ export function PostForm({ onSuccess, onPostCreated, className }: PostFormProps)
                     <Image 
                     src={mediaPreview}
                       alt="Preview"
+                      width={500}
+                      height={500}
                       className="rounded-lg w-full h-48 object-cover"
                       />
 

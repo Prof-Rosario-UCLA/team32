@@ -23,6 +23,8 @@ export function ImagePreview({
         src={imageUrl}
         alt={alt}
         onClick={() => setIsOpen(true)}
+        width={500}
+        height={500}
         className={cn(
           "rounded-lg object-contain w-full bg-muted/10 cursor-pointer transition-transform hover:scale-[1.02]",
           previewClassName
@@ -35,6 +37,8 @@ export function ImagePreview({
             <Image
               src={imageUrl} 
               alt={alt}
+               width={500}
+                height={500}
               className="max-w-full max-h-[90vh] object-contain rounded-lg"
               />
           </div>
