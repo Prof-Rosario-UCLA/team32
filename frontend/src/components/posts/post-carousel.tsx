@@ -431,17 +431,26 @@ export function PostCarousel({
             </div>
 
             <ScrollShadow>
-              <div className="flex gap-2 pb-2">
+              <div className="flex gap-2 pb-2 overflow-x-auto">
                 {availableTags.map(tag => (
                   <Badge
                     key={tag}
                     variant={selectedTags.includes(tag) ? "default" : "outline"}
-                    className="cursor-pointer"
+                    className={`
+                      cursor-pointer flex-shrink-0 whitespace-nowrap
+                      text-xs xs:text-sm 
+                      px-2 xs:px-3 py-1 xs:py-1.5
+                      max-w-[100px] xs:max-w-[140px] sm:max-w-[180px] md:max-w-none
+                      ${tag.length > 15 ? 'text-[10px] xs:text-xs' : ''}
+                    `}
                     onClick={() => toggleTag(tag)}
+                    title={tag} 
                   >
-                    {tag}
+                    <span className="truncate">
+                      {tag.length > 12 ? `${tag.slice(0, 12)}...` : tag}
+                    </span>
                     {selectedTags.includes(tag) && (
-                      <X className="ml-1 h-3 w-3" />
+                      <X className="ml-1 h-3 w-3 flex-shrink-0" />
                     )}
                   </Badge>
                 ))}
