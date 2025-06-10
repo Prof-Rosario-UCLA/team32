@@ -171,6 +171,23 @@ async function updateCacheWithNewPost(post) {
   }
 }
 
+// helper function to update tags cache with new post
+async function updateTagsCacheWithNewTags(newTags) {
+  const cacheKey = 'tags:all';
+  try {
+    const cachedTags = await client.get(cacheKey);
+    let tags = [];
+    if (cachedTags) {
+      tags = JSON.parse(cachedTags);
+    }
+    const updatedTags = Array.from(new Set([...tags, ...newTags]));
+    await client.set(cacheKey, JSON.stringify(updatedTags), 'EX', CACHE_TTL.TAGS);
+    console.log('Updated tags cache:', updatedTags);
+  } catch (error) {
+    console.error('Error updating tags cache:', error);
+  }
+}
+
 // Upload file endpoint (separate from post creation)
 router.post('/media', verifyToken, upload.single('file'), async (req, res) => {
   try {
@@ -444,6 +461,9 @@ router.post('/', verifyToken, async (req, res) => {
 
     // Update cache with new post
     await updateCacheWithNewPost(transformedPost);
+
+    // Update tags cache with new tags
+    await updateTagsCacheWithNewTags(post.tags);
 
     // Emit new post event via WebSocket
     const wss = getWebSocket();
