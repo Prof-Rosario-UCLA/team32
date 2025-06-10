@@ -110,13 +110,23 @@ jobs:
           # Update backend image
           ../kustomize edit set image backend=$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/backend:$GITHUB_SHA
           ../kustomize build . | kubectl apply -f -
+
+          # Force delete old backend pods and restart
+          kubectl delete pods -l app=backend -n ucla-forum --grace-period=0 --force
           kubectl rollout restart deployment backend -n ucla-forum
           kubectl rollout status deployment/backend -n ucla-forum
 
-          # Update frontend image
+          # Update frontend image  
           ../kustomize edit set image frontend=$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/frontend:$GITHUB_SHA
           ../kustomize build . | kubectl apply -f -
+
+          # Force delete old frontend pods and restart
+          kubectl delete pods -l app=frontend -n ucla-forum --grace-period=0 --force
           kubectl rollout restart deployment frontend -n ucla-forum
           kubectl rollout status deployment/frontend -n ucla-forum
+
+          # Clean up old ReplicaSets (keeps only latest)
+          kubectl delete replicaset -l app=backend -n ucla-forum --field-selector=status.replicas=0
+          kubectl delete replicaset -l app=frontend -n ucla-forum --field-selector=status.replicas=0
 
           kubectl get services -o wide -n ucla-forum
