@@ -1,5 +1,3 @@
-// lib/utils/event-utils.ts (or add to your existing utils file)
-
 import { MouseEvent, FormEvent } from 'react';
 
 /**

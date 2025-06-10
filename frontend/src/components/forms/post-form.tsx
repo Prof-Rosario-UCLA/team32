@@ -439,55 +439,63 @@ export function PostForm({ onSuccess, onPostCreated, className }: PostFormProps)
           <FormItem>
             <FormLabel>Add Media (Optional)</FormLabel>
             <div className="flex gap-4">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                ref={fileInputRef}
-                className="hidden"
-                id="image-upload"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-2"
-              >
-                <ImageIcon className="h-4 w-4" />
-                Upload Photo
-              </Button>
+               <input
+      type="file"
+      accept="image/*"
+      onChange={handleImageUpload}
+      ref={fileInputRef}
+      className="hidden"
+      id="image-upload"
+    />
+    <Button
+      type="button"
+      variant="outline"
+      onClick={() => fileInputRef.current?.click()}
+      className="flex items-center justify-center gap-1 xs:gap-2 text-xs xs:text-sm px-2 xs:px-4 py-1.5 xs:py-2 h-8 xs:h-10 min-w-0 flex-1 xs:flex-none"
+    >
+      <ImageIcon className="h-3 w-3 xs:h-4 xs:w-4 flex-shrink-0" />
+      <span className="hidden sm:inline truncate">Upload Photo</span>
+      <span className="sm:hidden xs:inline truncate">Upload</span>
+      <span className="xs:hidden">📷</span>
+    </Button>
 
-              <Button
-                type="button"
-                variant="outline"
-                onClick={startCamera}
-                className="flex items-center gap-2"
-              >
-                <Camera className="h-4 w-4" />
-                Take Photo
-              </Button>
+    <Button
+      type="button"
+      variant="outline"
+      onClick={startCamera}
+      className="flex items-center justify-center gap-1 xs:gap-2 text-xs xs:text-sm px-2 xs:px-4 py-1.5 xs:py-2 h-8 xs:h-10 min-w-0 flex-1 xs:flex-none"
+    >
+      <Camera className="h-3 w-3 xs:h-4 xs:w-4 flex-shrink-0" />
+      <span className="hidden sm:inline truncate">Take Photo</span>
+      <span className="sm:hidden xs:inline truncate">Camera</span>
+      <span className="xs:hidden">📸</span>
+    </Button>
 
-              <Button
-                type="button"
-                variant="outline"
-                onClick={isRecording ? stopRecording : startRecording}
-                className={cn(
-                  "flex items-center gap-2",
-                  isRecording && "bg-red-100 text-red-600 hover:bg-red-200"
-                )}
-              >
-                {isRecording ? (
-                  <>
-                    <Square className="h-4 w-4" />
-                    Stop Recording
-                  </>
-                ) : (
-                  <>
-                    <Mic className="h-4 w-4" />
-                    Record Voice Memo
-                  </>
-                )}
-              </Button>
+    <Button
+      type="button"
+      variant="outline"
+      onClick={isRecording ? stopRecording : startRecording}
+      className={cn(
+        "flex items-center justify-center gap-1 xs:gap-2 text-xs xs:text-sm px-2 xs:px-4 py-1.5 xs:py-2 h-8 xs:h-10 min-w-0 flex-1 xs:flex-none",
+        isRecording && "bg-red-100 text-red-600 hover:bg-red-200"
+      )}
+    >
+      {isRecording ? (
+        <>
+          <Square className="h-3 w-3 xs:h-4 xs:w-4 flex-shrink-0" />
+          <span className="hidden sm:inline truncate">Stop Recording</span>
+          <span className="sm:hidden xs:inline truncate">Stop</span>
+          <span className="xs:hidden">⏹️</span>
+        </>
+      ) : (
+        <>
+          <Mic className="h-3 w-3 xs:h-4 xs:w-4 flex-shrink-0" />
+          <span className="hidden sm:inline truncate">Record Voice Memo</span>
+          <span className="sm:hidden xs:inline truncate">Record</span>
+          <span className="xs:hidden">🎤</span>
+        </>
+      )}
+    </Button>
             </div>
 
             <Dialog open={showCamera} onOpenChange={(open) => {

@@ -7,7 +7,7 @@ export function CreatePostModal({ isOpen, onClose, onPostCreated }: CreatePostMo
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogTitle></DialogTitle>
       <DialogContent className="sm:max-w-[800px]">
-        <PostForm onSuccess={onClose} onPostCreated={onPostCreated} />
+        <PostForm onSuccess={onClose} onPostCreated={onPostCreated}           className="w-full min-w-0" />
       </DialogContent>
     </Dialog>
   );
