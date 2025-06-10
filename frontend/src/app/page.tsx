@@ -42,22 +42,24 @@ export default function Home() {
               {/* hero */}
               <div className="flex flex-col justify-center items-center text-center space-y-4 sm:space-y-6 pt-4 sm:pt-8 md:pt-0 md:items-start md:text-left">
                 <div className="relative w-full">
-                  <motion.div
-                    className="absolute left-6 -top-3 sm:left-9 sm:-top-4 md:-left-4 md:-top-4"
-                    animate={{
-                      scale: [1, 1.2, 1],
-                      rotate: [-5, 5, -5],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                  >
-                    <Flame className="hidden md:block text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
-                  </motion.div>
                   <h2 className="mb-3 sm:mb-4 text-2xl sm:text-3xl xs:text-4xl font-bold tracking-tight text-foreground md:text-4xl lg:text-5xl">
-                    Share Your{" "}
+                  <span className="relative">
+                      <motion.div
+                        className="absolute -left-2 -top-1 sm:-left-1.5 sm:-top-1.5 md:-left-2 md:-top-2 lg:-left-3 lg:-top-2.5"
+                        animate={{
+                          scale: [1, 1.2, 1],
+                          rotate: [-5, 5, -5],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        <Flame className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
+                      </motion.div>
+                      S
+                    </span>hare Your{" "}
                     <span className="relative inline-block">
                       <span className="relative z-10 bg-gradient-to-r from-orange-500 via-red-500 to-orange-500 bg-clip-text text-transparent">
                         Hot Takes
