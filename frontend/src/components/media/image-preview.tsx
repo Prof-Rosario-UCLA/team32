@@ -6,7 +6,6 @@ import { Button } from "../../components/ui/button";
 import { X } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { ImagePreviewProps } from "../../types/media";
-import Image from "next/image";
 import { withStopEvent, stopEvent } from "../../utils/stop-event";
 
 export function ImagePreview({ 
@@ -22,12 +21,11 @@ export function ImagePreview({
   return (
     <>
       <div onClick={stopEvent}>
-        <Image
+        <img
           src={imageUrl}
           alt={alt}
           onClick={withStopEvent(() => setIsOpen(true))}
-          width={500}
-          height={500}
+          loading="lazy"
           className={cn(
             "rounded-lg object-contain w-full bg-muted/10 cursor-pointer transition-transform hover:scale-[1.02]",
             previewClassName
@@ -50,11 +48,10 @@ export function ImagePreview({
                   <X className="h-4 w-4" />
                 </Button>
                 
-                <Image
+                <img
                   src={imageUrl} 
                   alt={alt}
-                  width={500}
-                  height={500}
+                  loading="lazy"
                   className="max-w-full max-h-[90vh] object-contain rounded-lg"
                 />
               </div>

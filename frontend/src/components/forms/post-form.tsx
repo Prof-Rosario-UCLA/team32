@@ -29,8 +29,6 @@ import {
 import { API_URL } from '../../config/api';
 import { type PostFormProps } from '../../types/forms';
 import {formSchema} from '../../lib/validations/post-schema';
-import Image from 'next/image';
-
 const MAX_TAGS = 5;
 
 export function PostForm({ onSuccess, onPostCreated, className }: PostFormProps) {
@@ -540,11 +538,10 @@ export function PostForm({ onSuccess, onPostCreated, className }: PostFormProps)
               <div className="mt-4 relative">
                 {mediaType === 'image' ? (
                   <div className="relative w-full max-w-md">
-                    <Image 
+                    <img 
                     src={mediaPreview}
                       alt="Preview"
-                      width={500}
-                      height={500}
+                      loading="lazy"
                       className="rounded-lg w-full h-48 object-cover"
                       />
 
