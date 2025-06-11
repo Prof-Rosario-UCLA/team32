@@ -6,26 +6,26 @@ Run `npm run dev` in the root directory. This will start both frontend and backe
 ## API Documentation:
 
 ### Authentication Endpoints:
-POST /api/auth/login
+`POST /api/auth/login`
 - Description: Authenticate user and get JWT token
 - Body: { email: string, password: string }
 - Response: { token: string, user: { id: number, email: string, role: string } }
 - Files: backend/routes/auth.js, frontend/src/lib/auth.ts
 
-POST /api/auth/signup
+`POST /api/auth/signup`
 - Description: Create new user account
 - Body: { email: string, password: string }
 - Response: { token: string, user: { id: number, email: string, role: string } }
 - Files: backend/routes/auth.js, frontend/src/lib/auth.ts
 
-GET /api/auth/me
+`GET /api/auth/me`
 - Description: Get current user info
 - Headers: Authorization: Bearer <token>
 - Response: { id: number, email: string, role: string }
 - Files: backend/routes/auth.js, frontend/src/lib/auth.ts
 
 ### Posts Endpoints:
-GET /api/posts
+`GET /api/posts`
 - Description: Get paginated posts with filtering and sorting
 - Query Parameters:
   - page: number (default: 1)
@@ -37,45 +37,45 @@ GET /api/posts
 - Response: { posts: Post[], pagination: { total, page, limit, totalPages } }
 - Files: backend/routes/posts.js, frontend/src/components/post-carousel.tsx
 
-POST /api/posts
+`POST /api/posts`
 - Description: Create new post
 - Headers: Authorization: Bearer <token>
 - Body: { title: string, content: string, tags: string[], mediaUrl?: string }
 - Response: { id: string, title: string, content: string, ... }
 - Files: backend/routes/posts.js, frontend/src/components/post-form.tsx
 
-POST /api/posts/with-upload
+`POST /api/posts/with-upload`
 - Description: Create post with media upload
 - Headers: Authorization: Bearer <token>, Content-Type: multipart/form-data
 - Body: { title: string, content: string, tags: string[], file: File }
 - Response: { id: string, title: string, content: string, mediaUrl: string, ... }
 - Files: backend/routes/posts.js, frontend/src/components/post-form.tsx
 
-POST /api/posts/:id/like
+`POST /api/posts/:id/like`
 - Description: Toggle like on a post
 - Headers: Authorization: Bearer <token>
 - Response: { id: string, liked: boolean, likesCount: number, ... }
 - Files: backend/routes/posts.js, frontend/src/components/post-carousel.tsx
 
-GET /api/posts/:id/comments
+`GET /api/posts/:id/comments`
 - Description: Get comments for a post
 - Response: Comment[]
 - Files: backend/routes/posts.js, frontend/src/components/comments-list.tsx
 
-POST /api/posts/:id/comments
+`POST /api/posts/:id/comments`
 - Description: Add comment to a post
 - Headers: Authorization: Bearer <token>
 - Body: { content: string }
 - Response: { id: string, content: string, author: { id: number, anonymousName: string }, ... }
 - Files: backend/routes/posts.js, frontend/src/components/comment-dialog.tsx
 
-GET /api/posts/tags
+`GET /api/posts/tags`
 - Description: Get all unique tags
 - Response: string[]
 - Files: backend/routes/posts.js, frontend/src/components/post-carousel.tsx
 
 ### Trending Endpoints:
-GET /api/trending
+`GET /api/trending`
 - Description: Get trending posts
 - Query Parameters:
   - limit: number (default: 5)
@@ -84,7 +84,7 @@ GET /api/trending
 - Files: backend/routes/trending.js, frontend/src/components/post-carousel.tsx
 
 ### Media Endpoints:
-POST /api/posts/media
+`POST /api/posts/media`
 - Description: Upload media file
 - Headers: Authorization: Bearer <token>, Content-Type: multipart/form-data
 - Body: { file: File }
