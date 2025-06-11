@@ -10,7 +10,8 @@ RUN npm install -g npm@latest
 COPY package*.json ./
 
 # Install all dependencies (including devDependencies for build)
-RUN npm ci --verbose
+# Use npm install instead of npm ci since package-lock.json might not exist
+RUN npm install --legacy-peer-deps --verbose
 
 # Copy source code
 COPY . .
@@ -30,7 +31,8 @@ RUN npm install -g npm@latest
 COPY package*.json ./
 
 # Install only production dependencies with additional flags to handle problematic packages
-RUN npm ci --only=production --no-optional --legacy-peer-deps --verbose
+# Use npm install instead of npm ci for production dependencies
+RUN npm install --omit=dev --no-optional --legacy-peer-deps --verbose
 
 # Copy built application from builder stage
 COPY --from=builder /app/.next ./.next
