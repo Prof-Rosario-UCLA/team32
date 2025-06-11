@@ -45,6 +45,7 @@ export function ImagePreview({
                   onClick={withStopEvent(() => setIsOpen(false))}
                   className="absolute top-2 right-2 z-50 h-8 w-8 rounded-full bg-black/60 text-white hover:bg-black/80 backdrop-blur-sm shadow-lg"
                 >
+                  <span className="sr-only">Close</span>
                   <X className="h-4 w-4" />
                 </Button>
                 

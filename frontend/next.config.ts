@@ -1,5 +1,18 @@
 import type { NextConfig } from "next";
 
+const cspHeader = `Add commentMore actions
+  default-src 'self';
+  script-src 'self' 'unsafe-eval' 'unsafe-inline';
+  style-src 'self' blob: data: pub-bcf1c007022c4efb921568837ba2d575.r2.dev;
+  img-src 'self' blob: data: pub-bcf1c007022c4efb921568837ba2d575.r2.dev;
+  font-src 'self';
+  object-src 'none';
+  base-uri 'self';
+  form-action 'self';
+  frame-ancestors 'none';
+  upgrade-insecure-requests;Add commentMore actions
+`;
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -23,9 +36,20 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
   ],
-
   },
-  
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: cspHeader.replace(/\n/g, ''),
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
