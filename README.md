@@ -1,7 +1,66 @@
 # Bruin Hot Take
 
-## Starting the app
+## Running the app in dev mode
+**Get a Postgres URL**
+Download PostgresSQL on your machine and create a local database
+```sql
+CREATE DATABASE bruinhottake_dev;
+```
+Now go back to this app's directory and run:
+```
+cd backend
+npx prisma generate
+npx prisma migrate dev
+```
+
+**Start Redis**
+Download Redis on your machine and start a local instance on your machine
+Example Windows Command:
+```
+redis-server --daemonize yes
+```
+SMTP Configuration
+```
+
+```
+
+
+
+
+
+
+
+**Configure `.env`**
+ Create an `.env` file in the `backend` directory and replace `DATABASE_URL`, `SMTP` variables and `R2` variables as needed.
+```
+NODE_ENV=development
+REDIS_URL=redis://localhost:6379
+REDIS_HOST=localhost
+REDIS_PORT=6379
+DATABASE_URL="postgresql://postgres:your_password@localhost:5432/bruinhottake_dev?schema=public"
+JWT_SECRET="your_secret"
+R2_ACCESS_KEY_ID=your_access_key
+R2_SECRET_ACCESS_KEY=your_secret
+R2_ACCOUNT_ID=your_account_id
+R2_BUCKET_NAME=bruinhottake-assets
+R2_PUBLIC_DEV_URL=your_endpoint
+R2_TOKEN=your_token
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=yourpassword
+SMTP_USER=your_email@gmail.com
+```
+
+
 Run `npm run dev` in the root directory. This will start both frontend and backend.
+
+## Deployment
+
+
+
+
 
 ## API Documentation:
 

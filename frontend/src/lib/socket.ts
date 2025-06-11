@@ -87,7 +87,12 @@ export const initializeWebSocket = () => {
 
   ws.onerror = (error) => {
     console.error('WebSocket error:', error);
-    emitEvent('connect_error', { message: 'Connection error' });
+    
+    // Emit connect_error event
+    emitEvent('connect_error', { message: 'WebSocket connection error' });
+    
+    // Attempt to reconnect
+    scheduleReconnect();
   };
 
   ws.onmessage = (event) => {

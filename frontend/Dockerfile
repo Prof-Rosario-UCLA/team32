@@ -40,7 +40,7 @@ RUN npm install -g npm@latest
 COPY package*.json ./
 
 # Install only production dependencies 
-RUN npm install --omit=dev --no-optional --legacy-peer-deps --verbose
+RUN npm install --omit=dev --no-optional --legacy-peer-deps
 
 # Copy built application from builder stage
 COPY --from=builder /app/.next ./.next
