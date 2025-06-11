@@ -20,6 +20,11 @@ RUN npm install --include=dev --legacy-peer-deps --ignore-scripts --verbose
 # Copy source code
 COPY . .
 
+# Set environment variables needed for build
+ENV NODE_ENV=production
+ENV NEXT_PUBLIC_API_URL=https://bruinhottake.brandonle.dev
+ENV NEXT_PUBLIC_WS_URL=wss://bruinhottake.brandonle.dev/ws
+
 # Build the application
 RUN npm run build
 
