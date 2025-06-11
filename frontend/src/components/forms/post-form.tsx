@@ -218,22 +218,65 @@ export function PostForm({ onSuccess, onPostCreated, className }: PostFormProps)
     }
   };
 
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: { ideal: 'environment' } },
-        audio: false 
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-      setShowCamera(true);
-    } catch (error) {
-      toast.error('Failed to access camera');
-      console.error('Error accessing camera:', error);
+const startCamera = async () => {
+  try {
+    
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error('getUserMedia is not supported in this browser');
     }
-  };
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        width: { ideal: 640 },
+        height: { ideal: 480 },
+        facingMode: 'user'
+      },
+      audio: false
+    });
+
+    if (!stream) {
+      throw new Error('No stream received');
+    }
+
+    streamRef.current = stream;
+
+    setShowCamera(true);
+        
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    let attempts = 0;
+    while (!videoRef.current && attempts < 20) {
+      await new Promise(resolve => setTimeout(resolve, 50));
+      attempts++;
+    }
+
+    if (!videoRef.current) {
+      throw new Error('Video element not found after waiting');
+    }
+
+    videoRef.current.srcObject = stream;
+    
+    const videoElement = videoRef.current;
+    
+
+
+
+    try {
+      await videoElement.play();
+    } catch (playError) {
+      console.error('Video play failed:', playError);
+    }
+
+  } catch (error: unknown) {
+    console.error('Camera error:', error);
+    toast.error('Unknown camera error');
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+  }
+};
+
 
   const stopCamera = () => {
     if (streamRef.current) {
@@ -358,7 +401,6 @@ export function PostForm({ onSuccess, onPostCreated, className }: PostFormProps)
         console.log('Post created:' + data);
         onPostCreated(data);
       }
-      console.log("What the balls?");
       if (onSuccess) {
         onSuccess();
       } else {
@@ -456,7 +498,6 @@ export function PostForm({ onSuccess, onPostCreated, className }: PostFormProps)
       <ImageIcon className="h-3 w-3 xs:h-4 xs:w-4 flex-shrink-0" />
       <span className="hidden sm:inline truncate">Upload Photo</span>
       <span className="sm:hidden xs:inline truncate">Upload</span>
-      <span className="xs:hidden">📷</span>
     </Button>
 
     <Button
@@ -468,7 +509,6 @@ export function PostForm({ onSuccess, onPostCreated, className }: PostFormProps)
       <Camera className="h-3 w-3 xs:h-4 xs:w-4 flex-shrink-0" />
       <span className="hidden sm:inline truncate">Take Photo</span>
       <span className="sm:hidden xs:inline truncate">Camera</span>
-      <span className="xs:hidden">📸</span>
     </Button>
 
     <Button
@@ -492,47 +532,53 @@ export function PostForm({ onSuccess, onPostCreated, className }: PostFormProps)
           <Mic className="h-3 w-3 xs:h-4 xs:w-4 flex-shrink-0" />
           <span className="hidden sm:inline truncate">Record Voice Memo</span>
           <span className="sm:hidden xs:inline truncate">Record</span>
-          <span className="xs:hidden">🎤</span>
         </>
       )}
     </Button>
             </div>
 
-            <Dialog open={showCamera} onOpenChange={(open) => {
-              if (!open) stopCamera();
-            }}>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Take a Photo</DialogTitle>
-                </DialogHeader>
-                <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-black">
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    className="h-full w-full object-cover"
-                  />
-                  <canvas ref={canvasRef} className="hidden" />
-                  <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={stopCamera}
-                      className="bg-black/50 text-white hover:bg-black/70"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={capturePhoto}
-                      className="bg-white text-black hover:bg-gray-100"
-                    >
-                      Capture
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+           <Dialog open={showCamera} onOpenChange={(open) => {
+  if (!open) stopCamera();
+}}>
+  <DialogContent className="w-[95vw] max-w-[500px] p-3 xs:p-6">
+    <DialogHeader>
+      <DialogTitle className="text-sm xs:text-base">Take a Photo</DialogTitle>
+    </DialogHeader>
+    
+    
+    
+    <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-black">
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted
+        className="h-full w-full object-cover"
+        style={{ backgroundColor: 'red' }} // Red background to see if video element is there
+      />
+      
+      <canvas ref={canvasRef} className="hidden" />
+      
+      <div className="absolute bottom-2 xs:bottom-4 left-0 right-0 flex justify-center gap-2 xs:gap-4 px-2 xs:px-4">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={stopCamera}
+          className="bg-black/50 text-white hover:bg-black/70 text-xs xs:text-sm px-2 xs:px-4 py-1 xs:py-2 h-7 xs:h-9"
+        >
+          Cancel
+        </Button>
+        <Button
+          type="button"
+          onClick={capturePhoto}
+          className="bg-white text-black hover:bg-gray-100 text-xs xs:text-sm px-2 xs:px-4 py-1 xs:py-2 h-7 xs:h-9"
+        >
+          Capture
+        </Button>
+      </div>
+    </div>
+  </DialogContent>
+</Dialog>
 
             {mediaPreview && (
               <div className="mt-4 relative">

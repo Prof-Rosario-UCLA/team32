@@ -40,7 +40,7 @@ export function NewPostNotification({ onRefresh, className, currentPosts }: NewP
     const socket = getSocket();
     
     const handleNewPost = (message: WebSocketMsg) => {
-      if (!message?.data || !message.data.id || !Array.isArray(message.data.tags)) {
+      if (!message.data.id || !Array.isArray(message.data.tags)) {
         console.error('Invalid post data received:', message);
         return;
       }
