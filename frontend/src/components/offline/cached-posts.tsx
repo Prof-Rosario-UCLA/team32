@@ -8,6 +8,7 @@ import { ImagePreview } from "../media/image-preview"
 import { Button } from "../../components/ui/button"
 import { Loader2, RefreshCw, WifiOff } from "lucide-react"
 import { ScrollShadow } from "../../components/ui/scroll-shadow"
+import {API_URL} from "../../config/api"
 
 type LoadingState = 'loading' | 'timeout' | 'success' | 'error' | 'offline'
 
@@ -25,7 +26,7 @@ export function CachedPosts() {
       // If we're offline, only try to get from cache
       if (!navigator.onLine) {
         const cache = await caches.open('bruin-hot-take-api-v1')
-        const request = new Request('http://localhost:3001/api/posts?sortBy=heat&order=desc&page=1&limit=10', {
+        const request = new Request(`${API_URL}/api/posts?sortBy=heat&order=desc&page=1&limit=10`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' }
         })
