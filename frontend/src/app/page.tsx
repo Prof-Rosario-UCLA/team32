@@ -11,6 +11,7 @@ import { motion } from "framer-motion";
 import { TrendingTopics } from "../components/posts/trending-topics";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import CookieConsentBanner from "components/functions/cookie-consent-banner";
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -213,6 +214,7 @@ export default function Home() {
             </div>
           )}
         </div>
+        <CookieConsentBanner/>
       </main>
 
       <AuthModals
