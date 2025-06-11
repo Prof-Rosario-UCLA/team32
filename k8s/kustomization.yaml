@@ -8,5 +8,6 @@ resources:
   - ingress.yaml
   - certificate.yaml
   - redis.yaml
+  - postgres.yaml
 
 namespace: ucla-forum 
