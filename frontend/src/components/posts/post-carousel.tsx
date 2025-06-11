@@ -257,6 +257,18 @@ export function PostCarousel({
           }
           return [processedPost, ...prevPosts];
         });
+
+        // also update available tags
+        // Add new tags from WebSocket posts as well
+        if (processedPost.tags && processedPost.tags.length > 0) {
+          setAvailableTags(prevTags => {
+            const newTags = processedPost.tags.filter(tag => !prevTags.includes(tag));
+            if (newTags.length > 0) {
+              return [...prevTags, ...newTags].sort();
+            }
+            return prevTags;
+          });
+        }
       } else {
         console.error('Invalid post data received:', message);
       }
@@ -376,6 +388,16 @@ export function PostCarousel({
       }
       return [newPost, ...prevPosts];
     });
+
+     if (newPost.tags && newPost.tags.length > 0) {
+    setAvailableTags(prevTags => {
+      const newTags = newPost.tags.filter(tag => !prevTags.includes(tag));
+      if (newTags.length > 0) {
+        return [...prevTags, ...newTags].sort(); // figured this would be nice
+      }
+      return prevTags;
+    });
+  }
   };
 
   return (
@@ -430,7 +452,8 @@ export function PostCarousel({
               </DropdownMenu>
             </div>
 
-            <ScrollShadow>
+                
+          <ScrollShadow orientation="horizontal" className="w-full">
               <div className="flex gap-2 pb-2 overflow-x-auto">
                 {availableTags.map(tag => (
                   <Badge
