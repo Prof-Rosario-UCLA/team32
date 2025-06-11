@@ -1,49 +1,46 @@
-# Build stage
+# Multi-stage build
 FROM node:20-slim AS builder
 
-# Set working directory
 WORKDIR /app
+
+# Update npm to latest version to avoid compatibility issues
+RUN npm install -g npm@latest
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Install all dependencies (including devDependencies for build)
+RUN npm ci --verbose
 
-# Copy the rest of the application
+# Copy source code
 COPY . .
-
-# Set production environment and build-time environment variables
-ENV NODE_ENV=production
-ARG NEXT_PUBLIC_API_URL=https://bruinhottake.brandonle.dev
-ARG NEXT_PUBLIC_WS_URL=wss://bruinhottake.brandonle.dev
-ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-ENV NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL}
 
 # Build the application
 RUN npm run build
 
 # Production stage
-FROM node:20-slim
+FROM node:20-slim AS production
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files and install production dependencies
-COPY package*.json ./
-RUN npm install --production
+# Update npm in production stage too
+RUN npm install -g npm@latest
 
-# Copy built application
+# Copy package files
+COPY package*.json ./
+
+# Install only production dependencies with additional flags to handle problematic packages
+RUN npm ci --only=production --no-optional --legacy-peer-deps --verbose
+
+# Copy built application from builder stage
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 
-# Set production environment and runtime environment variables
-ENV NODE_ENV=production
-ENV NEXT_PUBLIC_API_URL=https://bruinhottake.brandonle.dev
-ENV NEXT_PUBLIC_WS_URL=wss://bruinhottake.brandonle.dev
+# Copy any other necessary files
+COPY --from=builder /app/next.config.ts ./next.config.ts
 
-# Expose port 3000
+# Expose port
 EXPOSE 3000
 
-# Start Next.js
-CMD ["npm", "start"] 
+# Start the application
+CMD ["npm", "start"]
