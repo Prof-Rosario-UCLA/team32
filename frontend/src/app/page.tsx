@@ -4,7 +4,7 @@ import { Button } from "../components/ui/button";
 import { ArrowRight, Flame, Zap } from "lucide-react";
 import { useAuth } from "../contexts/auth-context";
 import { NavBar } from "../components/nav/nav-bar";
-import { PostCarousel } from "../components/posts/post-carousel";
+import { PostCarousel, PostCarouselRef } from "../components/posts/post-carousel";
 import { useState } from "react";
 import { AuthModals } from "../components/modals/auth-modals";
 import { motion } from "framer-motion";
@@ -12,6 +12,8 @@ import { TrendingTopics } from "../components/posts/trending-topics";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import CookieConsentBanner from "components/functions/cookie-consent-banner";
+import { useRef } from 'react';
+
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -24,9 +26,12 @@ export default function Home() {
     align: "start"
   });
 
+  const postCarouselRef = useRef<PostCarouselRef>(null);
+
+
   return (
 <div className="h-[100svh] bg-gradient-to-b from-background via-background to-orange-950/5 overflow-y-hidden">      
-<NavBar />
+<NavBar postCarouselRef={postCarouselRef} />
       <main className="container mx-auto flex h-[calc(100svh-3rem)] flex-col px-2 sm:px-4">
         <div className="flex flex-1 items-center justify-center">
           {loading ? (
@@ -36,7 +41,7 @@ export default function Home() {
             </div>
           ) : user ? (
             <div className="w-full max-w-2xl mx-auto">
-              <PostCarousel />
+              <PostCarousel ref={postCarouselRef}/>
             </div>
           ) : (
             <div className="grid w-full gap-4 sm:gap-6 md:gap-8 md:grid-cols-2">

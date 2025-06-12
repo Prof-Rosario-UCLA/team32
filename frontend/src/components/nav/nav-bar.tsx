@@ -21,7 +21,7 @@ import type { PostCarouselRef } from "../../components/posts/post-carousel";
 
 // Add props interface for NavBar
 interface NavBarProps {
-  postCarouselRef?: React.RefObject<PostCarouselRef>;
+  postCarouselRef?: React.RefObject<PostCarouselRef | null>;
 }
 
 export function NavBar({ postCarouselRef }: NavBarProps) {

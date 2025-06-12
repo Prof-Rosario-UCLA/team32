@@ -44,3 +44,7 @@ export interface TrendingTopic {
     comments: number;
     createdAt: string;
 }
+
+export interface PostCarouselRef {
+  handlePostCreated: (post: Post) => void;
+}
