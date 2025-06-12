@@ -16,12 +16,27 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
+import type { Post } from "../../types/post";
+import type { PostCarouselRef } from "../../components/posts/post-carousel";
 
-export function NavBar() {
+// Add props interface for NavBar
+interface NavBarProps {
+  postCarouselRef?: React.RefObject<PostCarouselRef>;
+}
+
+export function NavBar({ postCarouselRef }: NavBarProps) {
   const { user, loading } = useAuth();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
+
+  // Function to handle post creation from NavBar
+  const handlePostCreatedFromNav = (newPost: Post) => {
+    if (postCarouselRef?.current?.handlePostCreated) {
+      postCarouselRef.current.handlePostCreated(newPost);
+    }
+  };
+  
   const NavContent = () => (
     <>
       <ThemeToggle />
@@ -167,6 +182,7 @@ export function NavBar() {
       <CreatePostModal
         isOpen={isCreatePostOpen}
         onClose={() => setIsCreatePostOpen(false)}
+        onPostCreated={handlePostCreatedFromNav}
       />
     </>
   );

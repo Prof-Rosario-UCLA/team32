@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Flame, Search, ChevronDown, X } from "lucide-react";
@@ -26,14 +26,19 @@ import { WebSocketMessage } from '../../types/websocket';
 import {SORT_OPTIONS} from '../../lib/const';
 import { withStopEvent } from '../../utils/stop-event';
 
-export function PostCarousel({
+// Define the ref interface
+export interface PostCarouselRef {
+  handlePostCreated: (post: Post) => void;
+}
+
+export const PostCarousel = forwardRef<PostCarouselRef, PostCarouselProps>(function PostCarousel({
   initialPosts,
   onLoadMore,
   hasMore: propHasMore,
   isLoading: propIsLoading,
   showSortOptions = true,
   containerMode = 'fullscreen'
-}: PostCarouselProps) {
+}, ref) {
   const [posts, setPosts] = useState<Post[]>(initialPosts || []);
   const [loading, setLoading] = useState(propIsLoading || false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -45,8 +50,32 @@ export function PostCarousel({
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [showCreatePost, setShowCreatePost] = useState(false);
 
-
   const observer = useRef<IntersectionObserver | null>(null);
+
+  // Define handlePostCreated function
+  const handlePostCreated = useCallback((newPost: Post) => {
+    setPosts(prevPosts => {
+      if (prevPosts.some(existingPost => existingPost.id === newPost.id)) {
+        return prevPosts;
+      }
+      return [newPost, ...prevPosts];
+    });
+
+    if (newPost.tags && newPost.tags.length > 0) {
+      setAvailableTags(prevTags => {
+        const newTags = newPost.tags.filter(tag => !prevTags.includes(tag));
+        if (newTags.length > 0) {
+          return [...prevTags, ...newTags].sort();
+        }
+        return prevTags;
+      });
+    }
+  }, []);
+
+  // Expose handlePostCreated through ref
+  useImperativeHandle(ref, () => ({
+    handlePostCreated
+  }), [handlePostCreated]);
 
   // this is how we update likes
   useEffect(() => {
@@ -92,7 +121,6 @@ export function PostCarousel({
 
   const handlePostClose = () => {
     setSelectedPost(null);
-
   };
 
   const handlePostLike = async (postId: string) => {
@@ -274,48 +302,6 @@ export function PostCarousel({
       }
     });
 
-    /* //maybe for the future...
-    on<WebSocketMessage>('post_updated', (message) => {
-      console.log('Post updated:', message);
-      const post = message.type === 'post_updated' && message.data ? message.data : message;
-      if (post.id && Array.isArray(post.tags)) {
-        const processedPost = {
-          id: post.id,
-          title: post.title || '',
-          content: post.content || '',
-          tags: post.tags,
-          mediaUrl: post.mediaUrl && !post.mediaUrl.startsWith('http') 
-            ? `${API_URL}/api${post.mediaUrl}`
-            : post.mediaUrl || undefined,
-          author: post.author || { id: 0, email: '' },
-          likesCount: post.likesCount || 0,
-          commentsCount: post.commentsCount || 0,
-          liked: post.liked ?? false,
-          createdAt: post.createdAt || new Date().toISOString()
-        } as Post;
-        setPosts(prevPosts => 
-          prevPosts.map(existingPost => 
-            existingPost.id === processedPost.id ? processedPost : existingPost
-          )
-        );
-      } else {
-        console.error('Invalid post data received:', message);
-      }
-    });
-
-    on<WebSocketMessage>('post_deleted', (message) => {
-      console.log('Post deleted:', message);
-      // Handle both direct post objects and wrapped messages
-      const post = message.type === 'post_deleted' && message.data ? message.data : message;
-      if (post.id) {
-        setPosts(prevPosts => 
-          prevPosts.filter(existingPost => existingPost.id !== post.id)
-        );
-      } else {
-        console.error('Invalid post data received:', message);
-      }
-    });*/
-
     on<WebSocketMessage[]>('recent_messages', (messages) => {
       console.log('Recent messages received:', messages);
       if (Array.isArray(messages)) {
@@ -379,25 +365,6 @@ export function PostCarousel({
       console.error('Error refreshing posts:', error);
       toast.error('Failed to refresh posts');
     }
-  };
-
-  const handlePostCreated = (newPost: Post) => {
-    setPosts(prevPosts => {
-      if (prevPosts.some(existingPost => existingPost.id === newPost.id)) {
-        return prevPosts;
-      }
-      return [newPost, ...prevPosts];
-    });
-
-     if (newPost.tags && newPost.tags.length > 0) {
-    setAvailableTags(prevTags => {
-      const newTags = newPost.tags.filter(tag => !prevTags.includes(tag));
-      if (newTags.length > 0) {
-        return [...prevTags, ...newTags].sort(); // figured this would be nice
-      }
-      return prevTags;
-    });
-  }
   };
 
   return (
@@ -599,4 +566,4 @@ export function PostCarousel({
       </div>
     </div>
   );
-}
+});
